@@ -13,7 +13,8 @@ export function useGoogleAdsSummary(range?: string) {
       setState({ data, loading: false, error: data.error ?? null })
       // Persist for chat widget context
       try {
-        const top = data.campaigns?.slice().sort((a: any, b: any) => b.spend - a.spend)[0]
+        const sorted = data.campaigns?.slice().sort((a: any, b: any) => b.spend - a.spend) ?? []
+        const top = sorted[0]
         sessionStorage.setItem('dash_gads', JSON.stringify({
           spend:             data.totals?.spend,
           clicks:            data.totals?.clicks,
@@ -23,6 +24,15 @@ export function useGoogleAdsSummary(range?: string) {
           costPerConversion: data.totals?.costPerConversion,
           campaignCount:     data.campaigns?.length,
           topCampaign:       top?.name,
+          topCampaignSpend:  top?.spend,
+          campaigns:         sorted.slice(0, 5).map((c: any) => ({
+            name:        c.name,
+            spend:       c.spend,
+            clicks:      c.clicks,
+            conversions: c.conversions,
+            ctr:         c.ctr,
+            status:      c.status,
+          })),
         }))
       } catch {}
     } catch (e: any) {

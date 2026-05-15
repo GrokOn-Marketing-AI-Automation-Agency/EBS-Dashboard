@@ -19,6 +19,10 @@ export function useGSCSummary(range?: string) {
           ctr:         data.overview?.ctr,
           position:    data.overview?.position,
           topQuery:    data.topQueries?.[0]?.query,
+          topQueryClicks: data.topQueries?.[0]?.clicks,
+          topQueryPosition: data.topQueries?.[0]?.position,
+          topQueries:  data.topQueries?.slice(0, 5).map((q: any) => ({ query: q.query, clicks: q.clicks, impressions: q.impressions, ctr: q.ctr, position: q.position })),
+          topPages:    data.topPages?.slice(0, 5).map((p: any) => ({ page: p.page, clicks: p.clicks, impressions: p.impressions })),
           lastSync:    new Date().toISOString(),
         }))
       } catch {}
