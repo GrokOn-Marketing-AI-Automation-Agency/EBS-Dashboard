@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #F5F6F7; }
+.dark body { background: #020617; }
+#root { width: 100%; min-height: 100vh; }
