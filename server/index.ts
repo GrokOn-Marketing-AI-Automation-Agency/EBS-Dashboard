@@ -11,6 +11,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import nodemailer from 'nodemailer'
 import { getGA4Summary } from './ga4'
+import { getGSCSummary } from './gsc'
+import { getClaritySummary } from './clarity'
 import { getGoogleAdsSummary, isConfigured as gadsConfigured } from './googleads'
 import { getGHLSummary, getMockGHLSummary, isConfigured as ghlConfigured, normalizeLastName } from './ghl'
 
@@ -1064,6 +1066,31 @@ async function handleRequest(req: Request): Promise<Response> {
     }
   }
 
+  // ── /api/gsc/summary ────────────────────────────────────
+  if (url.pathname === '/api/gsc/summary') {
+    const range = url.searchParams.get('range')
+    try {
+      const data = await getGSCSummary(range)
+      console.log(`[GSC] Summary fetched (range: ${range ?? '30d'}) — ${data.overview.clicks} clicks, ${data.overview.impressions} impressions`)
+      return json({ ...data, source: 'live', lastSync: new Date().toISOString() })
+    } catch (e: any) {
+      console.error('[GSC] summary error:', e.message)
+      return json({ source: 'error', error: e.message }, 200)
+    }
+  }
+
+  // ── /api/clarity/summary ─────────────────────────────────
+  if (url.pathname === '/api/clarity/summary') {
+    try {
+      const data = await getClaritySummary()
+      console.log(`[Clarity] Served summary (source: ${data.source})`)
+      return json(data)
+    } catch (e: any) {
+      console.error('[Clarity] summary error:', e.message)
+      return json({ source: 'error', error: e.message }, 200)
+    }
+  }
+
   // ── /api/ghl/summary ────────────────────────────────────
   if (url.pathname === '/api/ghl/summary') {
     const range = url.searchParams.get('range') ?? '30d'
@@ -1173,9 +1200,9 @@ async function handleRequest(req: Request): Promise<Response> {
 
       // Build a rich system prompt from the live dashboard context passed by the frontend
       const ctx = body.context ?? {}
-      const systemPrompt = `You are an intelligent marketing performance assistant built into the Grokon Dashboard for Exterior Building Solutions (EBS Roofing).
+      const systemPrompt = `You are GROMAAP Assistant — an intelligent marketing performance AI built into the Grokon Dashboard for Exterior Building Solutions (EBS Roofing), a roofing and exterior services company in St. Louis, MO.
 
-You have access to the following live dashboard data:
+You have access to the following live dashboard data across all connected platforms:
 
 ## Google Ads (${ctx.gadsRange ?? 'selected period'})
 ${ctx.gads ? `- Total Spend: $${ctx.gads.spend?.toLocaleString()}
@@ -1193,22 +1220,48 @@ ${ctx.acculynx ? `- Total Jobs: ${ctx.acculynx.totalJobs?.toLocaleString()}
 - Top Lead Source: ${ctx.acculynx.topSource ?? 'N/A'}
 - Lead Sources: ${ctx.acculynx.leadSources?.map((s: any) => `${s.source} (${s.acculynx} jobs, $${s.totalValue?.toLocaleString()})`).join(', ')}` : 'Not available'}
 
-## GoHighLevel / GROMAAP
+## GoHighLevel / GROMAAP CRM
 ${ctx.ghl ? `- Total Contacts: ${ctx.ghl.totalContacts?.toLocaleString()}
 - Total Opportunities: ${ctx.ghl.totalOpps?.toLocaleString()}
 - Total Pipeline Value: $${ctx.ghl.totalValue?.toLocaleString()}
 - Conversations: ${ctx.ghl.conversations?.toLocaleString()}
 - Active Workflows: ${ctx.ghl.activeWorkflows}
-- AccuLynx Pipeline: ${ctx.ghl.acculynxOpps?.toLocaleString()} opps, $${ctx.ghl.acculynxValue?.toLocaleString()}` : 'Not available'}
+- AccuLynx Pipeline Opps: ${ctx.ghl.acculynxOpps?.toLocaleString()} opps worth $${ctx.ghl.acculynxValue?.toLocaleString()}` : 'Not available'}
 
-## Google Analytics 4 (${ctx.ga4Range ?? 'selected period'})
+## Google Analytics 4 — Website Traffic (${ctx.ga4Range ?? 'selected period'})
 ${ctx.ga4 ? `- Sessions: ${ctx.ga4.sessions?.toLocaleString()}
 - Users: ${ctx.ga4.users?.toLocaleString()}
 - Page Views: ${ctx.ga4.pageViews?.toLocaleString()}
 - Bounce Rate: ${ctx.ga4.bounceRate}%
-- Avg Session Duration: ${ctx.ga4.avgDuration}` : 'Not available'}
+- Avg Session Duration: ${ctx.ga4.avgDuration}s` : 'Not available'}
 
-Answer questions clearly and concisely. Use dollar amounts and percentages where relevant. If data is unavailable, say so honestly. Keep responses focused and actionable — this is a business dashboard, not a general chatbot. You can reference specific numbers from the data above.`
+## Google Search Console — Organic Search (${ctx.gadsRange ?? 'selected period'})
+${ctx.gsc ? `- Organic Clicks: ${ctx.gsc.clicks?.toLocaleString()}
+- Impressions: ${ctx.gsc.impressions?.toLocaleString()}
+- Avg CTR: ${ctx.gsc.ctr}%
+- Avg Position: ${ctx.gsc.position}
+- Top Keyword: "${ctx.gsc.topQuery ?? 'N/A'}"` : 'Not available'}
+
+## Microsoft Clarity — Session Behavior
+${ctx.clarity ? `- Project ID: ${ctx.clarity.projectId}
+- Sessions: ${ctx.clarity.overview?.sessions?.toLocaleString() ?? 'N/A'}
+- Users: ${ctx.clarity.overview?.users?.toLocaleString() ?? 'N/A'}
+- Bounce Rate: ${ctx.clarity.overview?.bounceRate ?? 'N/A'}%
+- Avg Session Duration: ${ctx.clarity.overview?.avgSessionDuration ?? 'N/A'}
+- New Users: ${ctx.clarity.overview?.newUsersPercent ?? 'N/A'}%
+- Rage Clicks: ${ctx.clarity.behavior?.rageClicks ?? 'N/A'}
+- Dead Clicks: ${ctx.clarity.behavior?.deadClicks ?? 'N/A'}
+- Avg Scroll Depth: ${ctx.clarity.behavior?.scrollDepth ?? 'N/A'}%
+- Top Device: ${ctx.clarity.devices?.[0]?.device ?? 'N/A'} (${ctx.clarity.devices?.[0]?.pct ?? 'N/A'}%)
+- Data source: ${ctx.clarity.source ?? 'unknown'}` : 'Connected (project: ko3ifc8c96) — data loading'}
+
+## Dashboard Context
+- Client: Exterior Building Solutions (EBS Roofing), St. Louis MO
+- Services: Roofing, siding, gutters, windows, soffit & fascia
+- All monetary values in USD
+- Selected date range: ${ctx.gadsRange ?? '30 days'}
+
+Answer questions clearly and concisely. Use dollar amounts and percentages where relevant. If data is unavailable, say so honestly. Keep responses focused and actionable — this is a business dashboard, not a general chatbot. You can reference specific numbers from the data above. When spotting issues (low CTR, attribution gaps, high bounce rate), proactively flag them and suggest actions.`
 
       const response = await anthropic.messages.create({
         model:      'claude-haiku-4-5',

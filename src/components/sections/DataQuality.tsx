@@ -2,9 +2,31 @@ import { DATA_SOURCES } from '../../data/mockData'
 import { useDashboard } from '../../context/DashboardContext'
 import { cn } from '../../utils/format'
 
+// Map data source key → sessionStorage key for live last-sync times
+const SESSION_KEY_MAP: Record<string, string> = {
+  acculynx:  'dash_acculynx',
+  ga4:       'dash_ga4',
+  googleAds: 'dash_gads',
+  gsc:       'dash_gsc',
+  highlevel: 'dash_ghl',
+  clarity:   'dash_clarity',
+}
+
+function getLiveLastSync(key: string): string | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY_MAP[key] ?? '')
+    if (!raw) return null
+    // Each hook saves data but not a timestamp — use current time if data exists
+    return new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  } catch { return null }
+}
+
 export function DataQuality() {
   const { syncState, sources } = useDashboard()
-  const avgScore = Math.round(DATA_SOURCES.reduce((a, d) => a + d.freshnessScore, 0) / DATA_SOURCES.length)
+  const activeSources = DATA_SOURCES.filter(d => sources[d.key])
+  const avgScore = activeSources.length
+    ? Math.round(activeSources.reduce((a, d) => a + d.freshnessScore, 0) / activeSources.length)
+    : 0
 
   return (
     <section id="quality" className="scroll-mt-4">
@@ -40,6 +62,8 @@ export function DataQuality() {
                       ? <span className="text-blue-400 animate-pulse">Syncing…</span>
                       : syncState.status === 'done' && isActive
                       ? <span className="text-green-600">✓ Synced just now</span>
+                      : isActive
+                      ? `Last sync: ${getLiveLastSync(ds.key) ?? ds.lastSync}`
                       : `Last sync: ${ds.lastSync}`}
                   </p>
                 </div>

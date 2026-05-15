@@ -180,10 +180,10 @@ export const DATA_SOURCES: DataSource[] = [
   { key: 'acculynx',  label: 'AccuLynx CRM',       icon: '🏠', lastSync: '2026-05-11 09:00', status: 'ok',      freshnessScore: 98 },
   { key: 'ga4',       label: 'Google Analytics 4',  icon: '📊', lastSync: '2026-05-11 08:45', status: 'ok',      freshnessScore: 95 },
   { key: 'googleAds', label: 'Google Ads',           icon: '🎯', lastSync: '2026-05-11 08:30', status: 'ok',      freshnessScore: 92 },
-  { key: 'gsc',       label: 'Search Console',       icon: '🔍', lastSync: '2026-05-10 22:00', status: 'warning', freshnessScore: 76 },
-  { key: 'highlevel', label: 'GROMAAP',              icon: '⚡', lastSync: '2026-05-11 07:15', status: 'ok',      freshnessScore: 88 },
-  { key: 'growmap',   label: 'GROMAAP Calls',         icon: '📞', lastSync: '2026-05-11 09:00', status: 'ok',      freshnessScore: 99 },
-  { key: 'clarity',   label: 'Microsoft Clarity',    icon: '🖱️', lastSync: '2026-05-11 06:00', status: 'ok',      freshnessScore: 85 },
+  { key: 'gsc',       label: 'Search Console',       icon: '🔍', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 90 },
+  { key: 'highlevel', label: 'GROMAAP',              icon: '⚡', lastSync: '2026-05-15 07:15', status: 'ok',      freshnessScore: 88 },
+  { key: 'growmap',   label: 'GROMAAP Calls',        icon: '📞', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 99 },
+  { key: 'clarity',   label: 'Microsoft Clarity',    icon: '🖱️', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 90 },
   { key: 'lsa',       label: 'Local Service Ads',    icon: '📍', lastSync: '2026-05-10 18:00', status: 'warning', freshnessScore: 72 },
 ]
 

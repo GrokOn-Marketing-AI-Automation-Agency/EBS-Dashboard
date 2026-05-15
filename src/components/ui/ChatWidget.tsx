@@ -13,6 +13,10 @@ const SUGGESTED = [
   'How much did I spend on ads this period?',
   'Which lead source has the highest close rate?',
   'How many opportunities are in the pipeline?',
+  'What are my top organic search keywords?',
+  'How is my organic search performance?',
+  'What\'s my website bounce rate?',
+  'Give me a full marketing summary',
 ]
 
 export function ChatWidget() {
@@ -38,7 +42,12 @@ export function ChatWidget() {
       const acculynx = JSON.parse(sessionStorage.getItem('dash_acculynx') ?? 'null')
       const ghl      = JSON.parse(sessionStorage.getItem('dash_ghl')      ?? 'null')
       const ga4      = JSON.parse(sessionStorage.getItem('dash_ga4')      ?? 'null')
-      return { gads, acculynx, ghl, ga4, gadsRange: dateRange, ga4Range: dateRange }
+      const gsc      = JSON.parse(sessionStorage.getItem('dash_gsc')      ?? 'null')
+      const clarityRaw = JSON.parse(sessionStorage.getItem('dash_clarity') ?? 'null')
+      const clarity = clarityRaw
+        ? { projectId: 'ko3ifc8c96', connected: true, ...clarityRaw }
+        : { projectId: 'ko3ifc8c96', connected: true }
+      return { gads, acculynx, ghl, ga4, gsc, clarity, gadsRange: dateRange, ga4Range: dateRange }
     } catch {
       return {}
     }

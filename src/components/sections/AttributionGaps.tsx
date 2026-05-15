@@ -165,23 +165,42 @@ function JobTimelinePanel({ lead }: { lead: AttributionGapLead }) {
   )
 }
 
-function GapRow({ lead, index }: { lead: AttributionGapLead; index: number }) {
+function GapRow({
+  lead, index, checked, onCheck,
+}: {
+  lead: AttributionGapLead
+  index: number
+  checked: boolean
+  onCheck: (id: string, val: boolean) => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const cfg = STATUS_CONFIG[lead.matchStatus]
 
   return (
     <>
-      <tr
-        className="hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer select-none"
-        onClick={() => setExpanded(e => !e)}
-      >
-        <td className="px-4 py-2.5 text-gray-400 dark:text-slate-500 text-xs w-8">{index + 1}</td>
-        <td className="px-4 py-2.5 font-mono text-sm font-medium text-gray-800 dark:text-slate-100">{lead.phone}</td>
-        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300">
+      <tr className={cn(
+        'hover:bg-gray-50 dark:hover:bg-slate-800 select-none',
+        checked && 'bg-blue-50/60 dark:bg-blue-900/10',
+      )}>
+        {/* Checkbox cell — click doesn't expand row */}
+        <td className="pl-4 pr-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={e => onCheck(lead.id, e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer accent-blue-600"
+          />
+        </td>
+        <td
+          className="px-4 py-2.5 text-gray-400 dark:text-slate-500 text-xs w-8 cursor-pointer"
+          onClick={() => setExpanded(e => !e)}
+        >{index + 1}</td>
+        <td className="px-4 py-2.5 font-mono text-sm font-medium text-gray-800 dark:text-slate-100 cursor-pointer" onClick={() => setExpanded(e => !e)}>{lead.phone}</td>
+        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300 cursor-pointer" onClick={() => setExpanded(e => !e)}>
           <div>{fmtDate(lead.date)}</div>
           <div className="text-gray-400 dark:text-slate-500">{fmtTime(lead.date)}</div>
         </td>
-        <td className="px-4 py-2.5 text-xs">
+        <td className="px-4 py-2.5 text-xs cursor-pointer" onClick={() => setExpanded(e => !e)}>
           <span className={cn(
             'inline-block px-2 py-0.5 rounded-full font-medium',
             lead.durationSecs >= 120 ? 'bg-green-50 text-green-700'
@@ -191,20 +210,23 @@ function GapRow({ lead, index }: { lead: AttributionGapLead; index: number }) {
             {fmtDuration(lead.durationSecs)}
           </span>
         </td>
-        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300">{lead.adType}</td>
-        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300 max-w-[160px] truncate">{lead.campaign}</td>
-        <td className="px-4 py-2.5">
+        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300 cursor-pointer" onClick={() => setExpanded(e => !e)}>{lead.adType}</td>
+        <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-slate-300 max-w-[160px] truncate cursor-pointer" onClick={() => setExpanded(e => !e)}>{lead.campaign}</td>
+        <td className="px-4 py-2.5 cursor-pointer" onClick={() => setExpanded(e => !e)}>
           <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.text, cfg.border)}>
             <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', cfg.dot)} />
             {cfg.label}
           </span>
         </td>
-        <td className="px-4 py-2.5 text-gray-300 dark:text-slate-600 text-xs text-right">{expanded ? '▲' : '▼'}</td>
+        <td
+          className="px-4 py-2.5 text-gray-300 dark:text-slate-600 text-xs text-right cursor-pointer"
+          onClick={() => setExpanded(e => !e)}
+        >{expanded ? '▲' : '▼'}</td>
       </tr>
 
       {expanded && (
         <tr className={cn('border-b border-gray-100 dark:border-slate-700', cfg.bg)}>
-          <td colSpan={8} className="px-6 py-4">
+          <td colSpan={9} className="px-6 py-4">
             {/* Call details grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
               <div>
@@ -281,24 +303,24 @@ function downloadCsv(gaps: AttributionGapLead[]) {
   URL.revokeObjectURL(url)
 }
 
-async function sendEmailViaServer(report: AttributionGapReport): Promise<void> {
-  const notInCrm    = report.gaps.filter(g => g.matchStatus === 'not_in_crm').length
-  const wrongSource = report.gaps.filter(g => g.matchStatus === 'wrong_source').length
+async function sendEmailViaServer(leads: AttributionGapLead[], report: AttributionGapReport): Promise<void> {
+  const notInCrm    = leads.filter(g => g.matchStatus === 'not_in_crm').length
+  const wrongSource = leads.filter(g => g.matchStatus === 'wrong_source').length
   const pct         = report.totalGadsCalls > 0
-    ? Math.round((report.gapCount / report.totalGadsCalls) * 100)
+    ? Math.round((leads.length / report.totalGadsCalls) * 100)
     : 0
 
-  const subject = `Action Required: ${report.gapCount} Google Ads Leads Need Attribution Fix`
+  const subject = `Action Required: ${leads.length} Google Ads Lead${leads.length !== 1 ? 's' : ''} Need Attribution Fix`
   const body    =
 `Hi EBS Team,
 
-Our attribution analysis has identified ${report.gapCount} leads (${pct}% of all Google Ads calls in this period) that are missing proper Google Ads attribution in AccuLynx.
+Our attribution analysis has identified ${leads.length} lead${leads.length !== 1 ? 's' : ''} (${pct}% of all Google Ads calls in this period) that are missing proper Google Ads attribution in AccuLynx.
 
 SUMMARY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Total Google Ads calls:    ${report.totalGadsCalls}
 Correctly attributed:      ${report.matchedInAccuLynx}
-Gaps requiring action:     ${report.gapCount}
+Selected for this report:  ${leads.length}
 
   ├─ Not in AccuLynx at all:     ${notInCrm}
   └─ Wrong source in AccuLynx:   ${wrongSource}
@@ -308,7 +330,7 @@ ACTION REQUIRED
 For "Not in CRM" leads → Create a new job in AccuLynx and set Lead Source = Google Ads
 For "Wrong Source" leads → Find the job in AccuLynx and update Lead Source to Google Ads
 
-The full list of affected leads (with phone numbers, call times, and ad details) is attached as a CSV file.
+The selected leads (with phone numbers, call times, and ad details) are attached as a CSV file.
 
 This data is generated from the Grokon · EBS Dashboard.
 Report date: ${report.reportDate ? new Date(report.reportDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'today'}
@@ -316,7 +338,7 @@ Report date: ${report.reportDate ? new Date(report.reportDate).toLocaleDateStrin
 Regards,
 Grokon Dashboard`
 
-  const csvContent  = buildCsv(report.gaps)
+  const csvContent  = buildCsv(leads)
   const csvFilename = `ebs-google-ads-attribution-gaps-${new Date().toISOString().slice(0, 10)}.csv`
 
   const res = await fetch('http://localhost:3001/api/send-email', {
@@ -336,10 +358,11 @@ export function AttributionGaps() {
   const [report,  setReport]  = useState<AttributionGapReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
-  const [open,    setOpen]    = useState(false)
-  const [tab,     setTab]     = useState<FilterTab>('all')
-  const [sending,   setSending]   = useState(false)
+  const [open,       setOpen]       = useState(false)
+  const [tab,        setTab]        = useState<FilterTab>('all')
+  const [sending,    setSending]    = useState(false)
   const [sendResult, setSendResult] = useState<'sent' | 'error' | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -363,6 +386,28 @@ export function AttributionGaps() {
 
   const gapPagination = usePagination(filtered, 10)
 
+  // ── Selection helpers ────────────────────────────────────────────────────
+  const allFilteredSelected = filtered.length > 0 && filtered.every(g => selectedIds.has(g.id))
+  const someFilteredSelected = filtered.some(g => selectedIds.has(g.id))
+
+  function toggleOne(id: string, val: boolean) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      val ? next.add(id) : next.delete(id)
+      return next
+    })
+  }
+
+  function toggleAll(val: boolean) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      filtered.forEach(g => val ? next.add(g.id) : next.delete(g.id))
+      return next
+    })
+  }
+
+  const selectedLeads = (report?.gaps ?? []).filter(g => selectedIds.has(g.id))
+
   const notInCrmCount    = report?.gaps.filter(g => g.matchStatus === 'not_in_crm').length ?? 0
   const wrongSourceCount = report?.gaps.filter(g => g.matchStatus === 'wrong_source').length ?? 0
   const pct              = report && report.totalGadsCalls > 0
@@ -371,10 +416,12 @@ export function AttributionGaps() {
 
   const handleSendToEBS = async () => {
     if (!report) return
+    const leadsToSend = selectedLeads.length > 0 ? selectedLeads : filtered
+    if (leadsToSend.length === 0) return
     setSending(true)
     setSendResult(null)
     try {
-      await sendEmailViaServer(report)
+      await sendEmailViaServer(leadsToSend, report)
       setSendResult('sent')
       setTimeout(() => setSendResult(null), 4000)
     } catch {
@@ -524,20 +571,25 @@ export function AttributionGaps() {
               ))}
             </div>
 
-            {/* Export */}
+            {/* Export + Send */}
             <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg">
+                  {selectedIds.size} selected
+                </span>
+              )}
               <button
-                onClick={() => report && downloadCsv(filtered)}
+                onClick={() => report && downloadCsv(selectedLeads.length > 0 ? selectedLeads : filtered)}
                 className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 border border-gray-200 dark:border-slate-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
               >
-                ↓ Export CSV
+                ↓ Export {selectedLeads.length > 0 ? `(${selectedLeads.length})` : 'CSV'}
               </button>
               <button
                 onClick={handleSendToEBS}
                 disabled={sending}
                 className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
               >
-                {sending ? '⏳ Sending…' : '✉ Send to EBS'}
+                {sending ? '⏳ Sending…' : selectedLeads.length > 0 ? `✉ Send ${selectedLeads.length} to EBS` : '✉ Send All to EBS'}
               </button>
             </div>
           </div>
@@ -557,6 +609,16 @@ export function AttributionGaps() {
             <table className="w-full text-xs min-w-[700px]">
               <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase tracking-wide">
                 <tr>
+                  <th className="pl-4 pr-2 py-2.5 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      ref={el => { if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected }}
+                      onChange={e => toggleAll(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer accent-blue-600"
+                      title="Select all"
+                    />
+                  </th>
                   <th className="text-left px-4 py-2.5 w-8">#</th>
                   <th className="text-left px-4 py-2.5">Phone</th>
                   <th className="text-left px-4 py-2.5">Date / Time</th>
@@ -569,11 +631,17 @@ export function AttributionGaps() {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
                 {gapPagination.paged.map((lead, i) => (
-                  <GapRow key={lead.id} lead={lead} index={gapPagination.page * gapPagination.pageSize + i} />
+                  <GapRow
+                    key={lead.id}
+                    lead={lead}
+                    index={gapPagination.page * gapPagination.pageSize + i}
+                    checked={selectedIds.has(lead.id)}
+                    onCheck={toggleOne}
+                  />
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
+                    <td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-slate-500">
                       No gaps found for this filter.
                     </td>
                   </tr>

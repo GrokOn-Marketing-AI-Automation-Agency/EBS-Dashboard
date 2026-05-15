@@ -9,6 +9,8 @@ import { LeadSourceBreakdown } from './components/sections/LeadSourceBreakdown'
 import { PipelineFunnel } from './components/sections/PipelineFunnel'
 import { ProspectsTable } from './components/sections/ProspectsTable'
 import { TrafficEngagement } from './components/sections/TrafficEngagement'
+import { SearchConsole } from './components/sections/SearchConsole'
+import { MicrosoftClarity } from './components/sections/MicrosoftClarity'
 import { CallTracking } from './components/sections/CallTracking'
 import { DiscrepancyAlerts } from './components/sections/DiscrepancyAlerts'
 import { AttributionGaps } from './components/sections/AttributionGaps'
@@ -72,6 +74,14 @@ function Dashboard() {
           {anyTrafficActive
             ? <TrafficEngagement />
             : <DisabledSection id="traffic" label="Traffic & Engagement" reason="Enable GA4, Search Console, or Clarity in the sidebar" />}
+
+          {sources.gsc
+            ? <SearchConsole />
+            : <DisabledSection id="search-console" label="Google Search Console" reason="Enable Search Console in the sidebar" />}
+
+          {sources.clarity
+            ? <MicrosoftClarity />
+            : <DisabledSection id="clarity" label="Microsoft Clarity" reason="Enable Microsoft Clarity in the sidebar" />}
 
           <CallTracking />
 
