@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: 'Search Console',     id: 'search-console' },
   { label: 'Clarity',            id: 'clarity'        },
   { label: 'Calls',              id: 'calls'          },
+  { label: 'Local Service Ads',  id: 'lsa'          },
   { label: 'ROI',                id: 'roi'          },
   { label: 'GROMAAP',            id: 'ghl'          },
   { label: 'Data Quality',       id: 'quality'      },

@@ -43,11 +43,12 @@ export function ChatWidget() {
       const ghl      = JSON.parse(sessionStorage.getItem('dash_ghl')      ?? 'null')
       const ga4      = JSON.parse(sessionStorage.getItem('dash_ga4')      ?? 'null')
       const gsc      = JSON.parse(sessionStorage.getItem('dash_gsc')      ?? 'null')
+      const lsa      = JSON.parse(sessionStorage.getItem('dash_lsa')      ?? 'null')
       const clarityRaw = JSON.parse(sessionStorage.getItem('dash_clarity') ?? 'null')
       const clarity = clarityRaw
         ? { projectId: 'ko3ifc8c96', connected: true, ...clarityRaw }
         : { projectId: 'ko3ifc8c96', connected: true }
-      return { gads, acculynx, ghl, ga4, gsc, clarity, gadsRange: dateRange, ga4Range: dateRange }
+      return { gads, acculynx, ghl, ga4, gsc, lsa, clarity, gadsRange: dateRange, ga4Range: dateRange }
     } catch {
       return {}
     }

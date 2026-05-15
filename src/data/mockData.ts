@@ -184,7 +184,7 @@ export const DATA_SOURCES: DataSource[] = [
   { key: 'highlevel', label: 'GROMAAP',              icon: '⚡', lastSync: '2026-05-15 07:15', status: 'ok',      freshnessScore: 88 },
   { key: 'growmap',   label: 'GROMAAP Calls',        icon: '📞', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 99 },
   { key: 'clarity',   label: 'Microsoft Clarity',    icon: '🖱️', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 90 },
-  { key: 'lsa',       label: 'Local Service Ads',    icon: '📍', lastSync: '2026-05-10 18:00', status: 'warning', freshnessScore: 72 },
+  { key: 'lsa',       label: 'Local Service Ads',    icon: '📍', lastSync: '2026-05-15 09:00', status: 'ok',      freshnessScore: 95 },
 ]
 
 // --- Clarity ---

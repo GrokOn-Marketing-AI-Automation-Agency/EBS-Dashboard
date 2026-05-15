@@ -17,6 +17,7 @@ import { AttributionGaps } from './components/sections/AttributionGaps'
 import { ROIAttribution } from './components/sections/ROIAttribution'
 import { GoHighLevel } from './components/sections/GoHighLevel'
 import { DataQuality } from './components/sections/DataQuality'
+import { LocalServiceAds } from './components/sections/LocalServiceAds'
 import { ChatWidget } from './components/ui/ChatWidget'
 
 function AccuLynxBanner() {
@@ -84,6 +85,10 @@ function Dashboard() {
             : <DisabledSection id="clarity" label="Microsoft Clarity" reason="Enable Microsoft Clarity in the sidebar" />}
 
           <CallTracking />
+
+          {sources.lsa
+            ? <LocalServiceAds />
+            : <DisabledSection id="lsa" label="Local Service Ads" reason="Enable Local Service Ads in the sidebar" />}
 
           {anyPaidActive
             ? <ROIAttribution />

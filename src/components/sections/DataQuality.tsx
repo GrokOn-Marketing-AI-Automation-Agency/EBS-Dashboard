@@ -10,6 +10,7 @@ const SESSION_KEY_MAP: Record<string, string> = {
   gsc:       'dash_gsc',
   highlevel: 'dash_ghl',
   clarity:   'dash_clarity',
+  lsa:       'dash_lsa',
 }
 
 function getLiveLastSync(key: string): string | null {

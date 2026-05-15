@@ -13,6 +13,7 @@ import nodemailer from 'nodemailer'
 import { getGA4Summary } from './ga4'
 import { getGSCSummary } from './gsc'
 import { getClaritySummary } from './clarity'
+import { getLSASummary } from './lsa'
 import { getGoogleAdsSummary, isConfigured as gadsConfigured } from './googleads'
 import { getGHLSummary, getMockGHLSummary, isConfigured as ghlConfigured, normalizeLastName } from './ghl'
 
@@ -1079,6 +1080,18 @@ async function handleRequest(req: Request): Promise<Response> {
     }
   }
 
+  // ── /api/lsa/summary ─────────────────────────────────────
+  if (url.pathname === '/api/lsa/summary') {
+    const range = url.searchParams.get('range')
+    try {
+      const data = await getLSASummary(range)
+      return json(data)
+    } catch (e: any) {
+      console.error('[LSA] summary error:', e.message)
+      return json({ source: 'error', error: e.message }, 200)
+    }
+  }
+
   // ── /api/clarity/summary ─────────────────────────────────
   if (url.pathname === '/api/clarity/summary') {
     try {
@@ -1227,6 +1240,16 @@ ${ctx.ghl ? `- Total Contacts: ${ctx.ghl.totalContacts?.toLocaleString()}
 - Conversations: ${ctx.ghl.conversations?.toLocaleString()}
 - Active Workflows: ${ctx.ghl.activeWorkflows}
 - AccuLynx Pipeline Opps: ${ctx.ghl.acculynxOpps?.toLocaleString()} opps worth $${ctx.ghl.acculynxValue?.toLocaleString()}` : 'Not available'}
+
+## Google Local Service Ads (${ctx.gadsRange ?? 'selected period'})
+${ctx.lsa ? `- Total Leads: ${ctx.lsa.totalLeads}
+- Charged Leads: ${ctx.lsa.chargedLeads} (${ctx.lsa.totalLeads > 0 ? Math.round(ctx.lsa.chargedLeads/ctx.lsa.totalLeads*100) : 0}% of total)
+- Phone Calls: ${ctx.lsa.phoneCalls} | Messages: ${ctx.lsa.messages}
+- New: ${ctx.lsa.newLeads} | Active: ${ctx.lsa.activeLeads} | Declined: ${ctx.lsa.declinedLeads}
+- LSA Spend: $${ctx.lsa.spend?.toLocaleString()}
+- Cost per Charged Lead: $${ctx.lsa.chargedLeads > 0 ? Math.round(ctx.lsa.spend / ctx.lsa.chargedLeads) : 'N/A'}
+- Impressions: ${ctx.lsa.impressions?.toLocaleString()} | Clicks: ${ctx.lsa.clicks?.toLocaleString()}
+- Categories: ${ctx.lsa.categories?.map((c: any) => `${c.category} (${c.total})`).join(', ')}` : 'Not connected'}
 
 ## Google Analytics 4 — Website Traffic (${ctx.ga4Range ?? 'selected period'})
 ${ctx.ga4 ? `- Sessions: ${ctx.ga4.sessions?.toLocaleString()}
