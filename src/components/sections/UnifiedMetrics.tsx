@@ -63,6 +63,7 @@ export function UnifiedMetrics() {
           label="Total Jobs in CRM"
           value={loading ? '…' : liveJobCount || totalLeads}
           source={isLive ? 'live' : 'mock'}
+          platform="AccuLynx"
           loading={loading}
           highlight
           sub={
@@ -75,6 +76,7 @@ export function UnifiedMetrics() {
           label="Active Pipeline"
           value={loading ? '…' : fmt.currency(pipelineValue)}
           source={isLive ? 'live' : 'mock'}
+          platform="AccuLynx"
           loading={loading}
           sub="Excl. closed / dead"
         />
@@ -82,6 +84,7 @@ export function UnifiedMetrics() {
           label="Contract Value"
           value={loading ? '…' : fmt.currency(totalValue)}
           source={isLive ? 'live' : 'mock'}
+          platform="AccuLynx"
           loading={loading}
           sub="All lead sources"
         />
@@ -89,6 +92,7 @@ export function UnifiedMetrics() {
           label="Avg Close Rate"
           value={loading ? '…' : weightedClose !== null ? `${weightedClose}%` : '—'}
           source={isLive ? 'live' : 'mock'}
+          platform="AccuLynx"
           loading={loading}
           sub="Weighted by leads"
         />
@@ -96,16 +100,18 @@ export function UnifiedMetrics() {
           label="Revenue per Lead"
           value={loading ? '…' : revenuePerLead > 0 ? fmt.currency(revenuePerLead) : '—'}
           source={isLive ? 'live' : 'mock'}
+          platform="AccuLynx"
           loading={loading}
           sub="Contract ÷ leads"
         />
 
-        {/* ── Mock / not yet connected ── */}
+        {/* ── Google Ads / GROMAAP ── */}
         <MetricCard
           label="Total Ad Spend"
           value={adSpend}
           change={gadsLive ? undefined : mock.totalSpend.change}
           source={gadsLive ? 'live' : 'mock'}
+          platform="Google Ads"
           sub={gadsLive ? `${gads!.totals.clicks.toLocaleString()} clicks` : 'Connect Google Ads'}
         />
         <MetricCard
@@ -113,6 +119,7 @@ export function UnifiedMetrics() {
           value={costPerLead}
           change={gadsLive ? undefined : mock.costPerLead.change}
           source={gadsLive ? 'live' : 'mock'}
+          platform="Google Ads"
           sub={gadsLive ? `${gads!.totals.conversions} conversions` : 'Needs Google Ads'}
         />
         <MetricCard
@@ -120,6 +127,7 @@ export function UnifiedMetrics() {
           value={ghlLive ? (ghl!.totalCalls).toLocaleString() : mock.totalCalls.value}
           change={ghlLive ? undefined : mock.totalCalls.change}
           source={ghlLive ? 'live' : 'mock'}
+          platform="GROMAAP"
           sub={ghlLive ? 'Phone conversations · GROMAAP' : 'Connect GROMAAP'}
         />
       </div>

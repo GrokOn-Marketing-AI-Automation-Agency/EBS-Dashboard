@@ -1,5 +1,15 @@
 import { fmt, cn } from '../../utils/format'
 
+const PLATFORM_COLORS: Record<string, string> = {
+  'AccuLynx':    'bg-blue-50   text-blue-700   dark:bg-blue-900/20   dark:text-blue-400',
+  'Google Ads':  'bg-amber-50  text-amber-700  dark:bg-amber-900/20  dark:text-amber-400',
+  'GROMAAP':     'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
+  'Google LSA':  'bg-green-50  text-green-700  dark:bg-green-900/20  dark:text-green-400',
+  'GA4':         'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400',
+  'GSC':         'bg-teal-50   text-teal-700   dark:bg-teal-900/20   dark:text-teal-400',
+  'Clarity':     'bg-pink-50   text-pink-700   dark:bg-pink-900/20   dark:text-pink-400',
+}
+
 interface Props {
   label:      string
   value:      string | number
@@ -8,11 +18,12 @@ interface Props {
   suffix?:    string
   highlight?: boolean
   sub?:       string
-  source?:    'live' | 'mock'   // shows a small badge so user knows what's real
+  source?:    'live' | 'mock'
+  platform?:  string   // e.g. 'AccuLynx', 'Google Ads', 'GROMAAP'
   loading?:   boolean
 }
 
-export function MetricCard({ label, value, change, prefix, suffix, highlight, sub, source, loading }: Props) {
+export function MetricCard({ label, value, change, prefix, suffix, highlight, sub, source, platform, loading }: Props) {
   const up = (change ?? 0) >= 0
   return (
     <div className={cn(
@@ -24,12 +35,20 @@ export function MetricCard({ label, value, change, prefix, suffix, highlight, su
         {source && (
           <span className={cn(
             'text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0',
-            source === 'live' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-600'
+            source === 'live' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
           )}>
             {source === 'live' ? '● Live' : '○ Est.'}
           </span>
         )}
       </div>
+      {platform && (
+        <span className={cn(
+          'text-[9px] font-semibold px-1.5 py-0.5 rounded-full w-fit uppercase tracking-wide',
+          PLATFORM_COLORS[platform] ?? 'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-400'
+        )}>
+          {platform}
+        </span>
+      )}
       {loading ? (
         <div className="h-8 w-24 bg-gray-100 dark:bg-slate-800 rounded animate-pulse mt-1" />
       ) : (
