@@ -87,10 +87,11 @@ export function MicrosoftClarity() {
     <section id="clarity" className="scroll-mt-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-            🖱️ Microsoft Clarity
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-pink-600 text-white text-sm shrink-0">C</span>
+            Microsoft Clarity
           </h2>
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
             Project: <span className="font-mono">{PROJECT_ID}</span> · Session recordings &amp; behaviour analytics

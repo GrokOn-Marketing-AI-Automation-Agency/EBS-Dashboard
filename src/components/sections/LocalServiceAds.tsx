@@ -62,10 +62,11 @@ export function LocalServiceAds() {
     <section id="lsa" className="scroll-mt-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-            📍 Local Service Ads
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-green-600 text-white text-sm shrink-0">📍</span>
+            Local Service Ads
           </h2>
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
             Google LSA · Roofing, Siding &amp; Windows · Account 901-408-8688

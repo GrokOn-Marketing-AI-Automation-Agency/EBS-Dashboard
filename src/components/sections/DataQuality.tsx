@@ -31,7 +31,15 @@ export function DataQuality() {
 
   return (
     <section id="quality" className="scroll-mt-4">
-      <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-3">Data Quality &amp; Freshness</h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-600 text-white text-sm shrink-0">🛡</span>
+            Data Quality &amp; Freshness
+          </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">Connection status &amp; freshness score across all sources</p>
+        </div>
+      </div>
       <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <div>

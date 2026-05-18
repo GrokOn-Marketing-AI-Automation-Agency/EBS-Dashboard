@@ -47,10 +47,14 @@ export function UnifiedMetrics() {
 
   return (
     <section id="kpi" className="scroll-mt-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
-          Key Performance Indicators
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-700 text-white text-sm shrink-0">📊</span>
+            Key Performance Indicators
+          </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">Live KPIs across all connected platforms</p>
+        </div>
         <div className="flex items-center gap-2">
           {data && <DataBadge source={data.source} dataSource={data.dataSource} lastSync={data.lastSync} />}
           <button onClick={refetch} className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300 transition-colors">↻ Refresh</button>

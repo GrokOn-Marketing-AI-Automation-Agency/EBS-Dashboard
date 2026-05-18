@@ -55,7 +55,15 @@ export function CallTracking() {
 
   return (
     <section id="calls" className="scroll-mt-4">
-      <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-3">Call Tracking · GROMAAP</h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-purple-600 text-white text-sm shrink-0">📞</span>
+            Call Tracking
+          </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">GROMAAP · Calls by source, duration &amp; answer rate</p>
+        </div>
+      </div>
       <div className={`transition-opacity ${!sources.growmap ? 'opacity-40 pointer-events-none' : ''}`}>
         {!sources.growmap && (
           <div className="mb-3 px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-lg text-xs text-gray-500 dark:text-slate-400 text-center">

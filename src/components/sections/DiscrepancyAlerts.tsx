@@ -270,10 +270,13 @@ export function DiscrepancyAlerts() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Discrepancy Alerts</h2>
-          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{rangeLabel} · Live cross-platform analysis</p>
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-red-500 text-white text-sm shrink-0">⚠</span>
+            Discrepancy Alerts
+          </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">{rangeLabel} · Live cross-platform analysis</p>
         </div>
         <div className="flex items-center gap-2">
           {criticalCount > 0 && (

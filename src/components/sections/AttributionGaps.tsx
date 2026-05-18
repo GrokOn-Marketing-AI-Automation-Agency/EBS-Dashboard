@@ -435,10 +435,14 @@ export function AttributionGaps() {
   return (
     <section id="attribution-gaps" className="scroll-mt-4">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
-          Google Ads Attribution Gaps
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-600 text-white text-sm shrink-0">G</span>
+            Google Ads Attribution Gaps
+          </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">Leads tracked in Google Ads but missing from AccuLynx CRM</p>
+        </div>
         <div className="flex items-center gap-2">
           {report?.source === 'mock' && (
             <span className="text-xs px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-full">
