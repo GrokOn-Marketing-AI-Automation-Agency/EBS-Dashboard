@@ -1,4 +1,6 @@
 import { useAccuLynxSummary } from '../../hooks/useAccuLynx'
+import { useGoogleAdsSummary } from '../../hooks/useGoogleAds'
+import { useGHLSummary } from '../../hooks/useGHL'
 import { getLeadSources } from '../../data/mockData'
 import { cn } from '../../utils/format'
 import { useDashboard } from '../../context/DashboardContext'
@@ -6,19 +8,30 @@ import { DataBadge } from '../ui/DataBadge'
 
 export function SourceComparison() {
   const { dateRange, sources } = useDashboard()
-  const { data: acxData } = useAccuLynxSummary(dateRange)
+  const { data: acxData }  = useAccuLynxSummary(dateRange)
+  const { data: gadsData } = useGoogleAdsSummary(dateRange)
+  const { data: ghlData }  = useGHLSummary()
 
-  // AccuLynx total from live data if available, else from mock
-  const mockRows    = getLeadSources(dateRange)
+  const mockRows = getLeadSources(dateRange)
+
+  // AccuLynx — live if available
   const acculynxTotal = acxData
     ? acxData.leadSources.reduce((a, r) => a + r.acculynx, 0)
     : mockRows.reduce((a, r) => a + r.acculynx, 0)
 
-  const googleAdsTotal = mockRows.find(r => r.source === 'Google Ads')?.googleAds ?? 0
-  const highlevelTotal = mockRows.reduce((a, r) => a + r.highlevel, 0)
+  // Google Ads — use live conversions if available
+  const googleAdsTotal = gadsData
+    ? (gadsData.totals?.conversions ?? 0)
+    : (mockRows.find(r => r.source === 'Google Ads')?.googleAds ?? 0)
+
+  // GROMAAP — use live new contacts in period if available
+  const highlevelTotal = ghlData
+    ? (ghlData.contacts?.newInPeriod ?? ghlData.contacts?.leads ?? 0)
+    : mockRows.reduce((a, r) => a + r.highlevel, 0)
+
   const variance = acculynxTotal > 0 ? Math.round(((googleAdsTotal - acculynxTotal) / acculynxTotal) * 100) : 0
 
-  // Use live row data if available
+  // Row-level breakdown — AccuLynx live rows, others from mock as reference
   const rows = acxData
     ? acxData.leadSources.map(r => ({
         source:    r.source,
@@ -43,9 +56,9 @@ export function SourceComparison() {
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
-          { platform: 'Google Ads',   value: googleAdsTotal, icon: '🎯', show: sources.googleAds, badge: null },
-          { platform: 'AccuLynx CRM', value: acculynxTotal,  icon: '🏠', show: sources.acculynx,  badge: acxData?.source },
-          { platform: 'GROMAAP',      value: highlevelTotal, icon: '⚡', show: sources.highlevel,  badge: null },
+          { platform: 'Google Ads',   value: googleAdsTotal, icon: '🎯', show: sources.googleAds, badge: gadsData?.source ?? null },
+          { platform: 'AccuLynx CRM', value: acculynxTotal,  icon: '🏠', show: sources.acculynx,  badge: acxData?.source ?? null },
+          { platform: 'GROMAAP',      value: highlevelTotal, icon: '⚡', show: sources.highlevel,  badge: ghlData?.source ?? null },
         ].map(({ platform, value, icon, show, badge }) => (
           <div key={platform} className={cn(
             'bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-4 shadow-sm text-center transition-opacity',
