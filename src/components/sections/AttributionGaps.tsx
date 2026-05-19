@@ -3,6 +3,7 @@ import { useDashboard } from '../../context/DashboardContext'
 import { acculynxService, type AttributionGapLead, type AttributionGapReport } from '../../services/acculynx'
 import { cn } from '../../utils/format'
 import { Paginator, usePagination } from '../ui/Paginator'
+import { API_BASE } from '../../utils/apiBase'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -341,7 +342,7 @@ Grokon Dashboard`
   const csvContent  = buildCsv(leads)
   const csvFilename = `ebs-google-ads-attribution-gaps-${new Date().toISOString().slice(0, 10)}.csv`
 
-  const res = await fetch('http://localhost:3001/api/send-email', {
+  const res = await fetch(`${API_BASE}/api/send-email`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ subject, body, csvContent, csvFilename }),

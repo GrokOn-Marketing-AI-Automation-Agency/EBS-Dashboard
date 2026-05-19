@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
 import { cn } from '../../utils/format'
 import gromaapLogo from '../../assets/gromaap-logo.png'
+import { API_BASE } from '../../utils/apiBase'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -65,7 +66,7 @@ export function ChatWidget() {
     setLoading(true)
 
     try {
-      const res = await fetch('http://localhost:3001/api/chat', {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: updated, context: buildContext() }),

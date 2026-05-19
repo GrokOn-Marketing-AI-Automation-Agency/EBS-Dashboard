@@ -60,7 +60,8 @@ export interface GHLSummary {
   error?:        string
 }
 
-const BASE = '/api/ghl'
+import { API_BASE } from '../utils/apiBase'
+const BASE = `${API_BASE}/api/ghl`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

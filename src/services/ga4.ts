@@ -1,4 +1,5 @@
-const BASE = '/api/ga4'
+import { API_BASE } from '../utils/apiBase'
+const BASE = `${API_BASE}/api/ga4`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

@@ -87,7 +87,8 @@ export interface AcxStatus {
   message?:  string
 }
 
-const BASE = '/api/acculynx'
+import { API_BASE } from '../utils/apiBase'
+const BASE = `${API_BASE}/api/acculynx`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

@@ -1,4 +1,5 @@
-const BASE = 'http://localhost:3001'
+import { API_BASE } from '../utils/apiBase'
+const BASE = API_BASE
 
 export interface GSCOverview {
   clicks:      number
