@@ -24,7 +24,7 @@ const anthropic = new Anthropic({
 
 const API_BASE   = 'https://api.acculynx.com/api/v2'
 const API_KEY    = process.env.ACCULYNX_API_KEY ?? ''
-const PORT       = 3001
+const PORT       = Number(process.env.PORT) || 3001
 const SCHEDULE_ID = process.env.ACCULYNX_SCHEDULE_ID ?? 'e6997ed7-153a-4e35-b72a-ab57910fe842'
 
 // ─── Date range helpers ──────────────────────────────────────────────────────
