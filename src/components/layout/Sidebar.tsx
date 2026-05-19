@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
 import { DATA_SOURCES } from '../../data/mockData'
+import { CLIENTS } from '../../config/clients'
 import { cn } from '../../utils/format'
 import gromaapLogo from '../../assets/gromaap-logo.png'
 
@@ -21,7 +23,8 @@ const NAV_ITEMS = [
 ]
 
 export function Sidebar() {
-  const { sources, toggleSource, theme, toggleTheme } = useDashboard()
+  const { sources, toggleSource, theme, toggleTheme, activeClient, setActiveClientId } = useDashboard()
+  const [clientMenuOpen, setClientMenuOpen] = useState(false)
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -35,7 +38,7 @@ export function Sidebar() {
           alt="GROMAAP"
           className="w-full max-w-[152px] mx-auto block"
         />
-        <p className="text-center text-[10px] text-gray-400 dark:text-slate-500 mt-1.5 tracking-wide">EBS Dashboard</p>
+        <p className="text-center text-[10px] text-gray-400 dark:text-slate-500 mt-1.5 tracking-wide">{activeClient.shortName} Dashboard</p>
       </div>
 
       <div className="px-3 py-4 flex-1">
@@ -79,11 +82,51 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 sticky bottom-0 bg-white dark:bg-slate-900">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400 dark:text-slate-500">
-            Client: <span className="text-gray-600 dark:text-slate-300 font-medium">EBS Roofing</span>
-          </span>
+      <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 sticky bottom-0 bg-white dark:bg-slate-900 space-y-2">
+
+        {/* Client switcher */}
+        <div className="relative">
+          <button
+            onClick={() => setClientMenuOpen(v => !v)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <span className={cn('w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0', activeClient.color, activeClient.textColor)}>
+              {activeClient.shortName.charAt(0)}
+            </span>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-xs font-semibold text-gray-700 dark:text-slate-200 truncate">{activeClient.shortName}</p>
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 truncate">{activeClient.industry}</p>
+            </div>
+            <span className="text-gray-400 text-[10px]">{clientMenuOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {clientMenuOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden z-50">
+              {CLIENTS.map(client => (
+                <button
+                  key={client.id}
+                  onClick={() => { setActiveClientId(client.id); setClientMenuOpen(false) }}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors',
+                    client.id === activeClient.id && 'bg-blue-50 dark:bg-blue-900/20'
+                  )}
+                >
+                  <span className={cn('w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0', client.color, client.textColor)}>
+                    {client.shortName.charAt(0)}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-slate-200 truncate">{client.shortName}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-slate-500">{client.live ? '● Live' : '○ Mock data'}</p>
+                  </div>
+                  {client.id === activeClient.id && <span className="text-blue-500 text-xs">✓</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Theme toggle */}
+        <div className="flex justify-end">
           <button
             onClick={toggleTheme}
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}

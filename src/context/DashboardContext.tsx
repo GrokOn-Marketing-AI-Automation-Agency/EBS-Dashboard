@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { DataSourceState, DateRange, CompareMode } from '../types'
+import { DEFAULT_CLIENT_ID, getClient, type ClientConfig } from '../config/clients'
 
 interface SyncState { status: 'idle' | 'syncing' | 'done'; lastSync: string }
 
@@ -9,6 +10,8 @@ interface DashboardContextValue {
   compareMode: CompareMode
   syncState: SyncState
   theme: 'light' | 'dark'
+  activeClient: ClientConfig
+  setActiveClientId: (id: string) => void
   toggleSource: (key: keyof DataSourceState) => void
   setDateRange: (r: DateRange) => void
   setCompareMode: (m: CompareMode) => void
@@ -30,7 +33,15 @@ const DEFAULT_SOURCES: DataSourceState = {
 }
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [sources, setSources] = useState<DataSourceState>(DEFAULT_SOURCES)
+  const [activeClientId, setActiveClientId] = useState<string>(() => {
+    return localStorage.getItem('activeClient') ?? DEFAULT_CLIENT_ID
+  })
+  const activeClient = getClient(activeClientId)
+
+  const [sources, setSources] = useState<DataSourceState>(() => ({
+    ...DEFAULT_SOURCES,
+    ...activeClient.sources,
+  }))
   const [dateRange, setDateRange] = useState<DateRange>('7d')
   const [compareMode, setCompareMode] = useState<CompareMode>('wow')
   const [syncState, setSyncState] = useState<SyncState>({ status: 'idle', lastSync: 'May 11, 2026 9:00 AM' })
@@ -38,6 +49,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('theme')
     return saved === 'dark' ? 'dark' : 'light'
   })
+
+  // When client switches, update sources to match client defaults
+  const handleSetActiveClientId = useCallback((id: string) => {
+    const client = getClient(id)
+    setActiveClientId(id)
+    setSources({ ...DEFAULT_SOURCES, ...client.sources })
+    localStorage.setItem('activeClient', id)
+  }, [])
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -65,7 +84,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [syncState.lastSync])
 
   return (
-    <DashboardContext.Provider value={{ sources, dateRange, compareMode, syncState, theme, toggleSource, setDateRange, setCompareMode, triggerSync, toggleTheme }}>
+    <DashboardContext.Provider value={{ sources, dateRange, compareMode, syncState, theme, activeClient, setActiveClientId: handleSetActiveClientId, toggleSource, setDateRange, setCompareMode, triggerSync, toggleTheme }}>
       {children}
     </DashboardContext.Provider>
   )
