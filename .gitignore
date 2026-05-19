@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.production
 
 # Service account credentials — never commit
 server/ga4-service-account.json
