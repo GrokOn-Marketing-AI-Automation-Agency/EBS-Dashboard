@@ -21,6 +21,16 @@ let _creds: {
 
 function getCreds() {
   if (_creds) return _creds
+  // Try env variable first (used in Azure / production)
+  if (process.env.GA4_SERVICE_ACCOUNT_JSON) {
+    try {
+      _creds = JSON.parse(process.env.GA4_SERVICE_ACCOUNT_JSON)
+      return _creds!
+    } catch (e: any) {
+      throw new Error(`GA4: Failed to parse GA4_SERVICE_ACCOUNT_JSON env var — ${e.message}`)
+    }
+  }
+  // Fall back to key file (local dev)
   try {
     const raw = readFileSync(resolve(KEY_FILE), 'utf8')
     _creds = JSON.parse(raw)
