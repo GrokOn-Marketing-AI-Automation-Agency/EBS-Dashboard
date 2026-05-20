@@ -114,6 +114,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
     campaignAllTimeRows,
     keywordPeriodRows,
     timeSeriesRows,
+    smartCampaignRows,
     callRows,
   ] = await Promise.allSettled([
 
@@ -187,7 +188,20 @@ export async function getGoogleAdsSummary(range?: string | null) {
       ORDER BY segments.date ASC
     `),
 
-    // 5. Call conversion details
+    // 5. Smart Campaigns — live in a separate resource, never returned by FROM campaign
+    gaqlSearch(`
+      SELECT
+        campaign.name,
+        campaign.status,
+        campaign.advertising_channel_type,
+        metrics.impressions,
+        metrics.clicks,
+        metrics.cost_micros,
+        metrics.conversions
+      FROM smart_campaign_setting
+    `).catch(() => [] as any[]),
+
+    // 6. Call conversion details
     gaqlSearch(`
       SELECT
         call_view.caller_area_code,
@@ -236,6 +250,29 @@ export async function getGoogleAdsSummary(range?: string | null) {
       }))
     : []
 
+  // ── Smart Campaigns (separate resource) ──────────────────────────────────
+  const smartCampaigns = smartCampaignRows.status === 'fulfilled'
+    ? smartCampaignRows.value.map((r: any) => ({
+        name:        r.campaign?.name                  ?? 'Unknown',
+        status:      r.campaign?.status                ?? 'UNKNOWN',
+        channelType: 'SMART',
+        spend:       micro(r.metrics?.costMicros),
+        clicks:      Number(r.metrics?.clicks      ?? 0),
+        impressions: Number(r.metrics?.impressions ?? 0),
+        conversions: Math.round(Number(r.metrics?.conversions ?? 0) * 10) / 10,
+        ctr:         0,
+        avgCpc:      0,
+      }))
+    : []
+
+  // Merge Smart Campaigns into the all-time list (dedup by name)
+  const allTimeNames = new Set(campaignsAllTime.map(c => c.name))
+  const mergedAllTime = [
+    ...campaignsAllTime,
+    ...smartCampaigns.filter(c => !allTimeNames.has(c.name)),
+  ]
+
+
   // Merge strategy: all-time gives the complete campaign roster (Smart Campaigns
   // and other types the API silently drops from date-filtered queries).
   // For each all-time campaign, overlay period metrics if available; otherwise
@@ -247,14 +284,15 @@ export async function getGoogleAdsSummary(range?: string | null) {
   const periodByName = new Map(campaignsPeriod.map(c => [c.name, c]))
 
   const campaigns = hasPeriodData
-    ? campaignsAllTime.map(c => {
+    ? mergedAllTime.map(c => {
         const period = periodByName.get(c.name)
         if (period) return period
-        // Campaign exists in account but absent from period query (e.g. Smart Campaign):
-        // show it with zero period metrics so it is never invisible
+        // Smart Campaigns: use their all-time metrics since period query returns nothing
+        if (c.channelType === 'SMART') return c
+        // Regular campaign with no period activity — zero out period metrics
         return { ...c, spend: 0, clicks: 0, impressions: 0, conversions: 0, ctr: 0, avgCpc: 0 }
       })
-    : campaignsAllTime
+    : mergedAllTime
 
   // ── Totals ────────────────────────────────────────────────────────────────
   function sumCampaigns(list: typeof campaigns) {
@@ -276,7 +314,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
   }
 
   const totals        = sumCampaigns(campaigns)
-  const totalsAllTime = sumCampaigns(campaignsAllTime)
+  const totalsAllTime = sumCampaigns(mergedAllTime)
 
   // ── Daily time series ─────────────────────────────────────────────────────
   // Aggregate across all campaigns per date
@@ -360,16 +398,17 @@ export async function getGoogleAdsSummary(range?: string | null) {
       }))
     : []
 
-  const allPaused = campaignsAllTime.length > 0 &&
-    campaignsAllTime.every(c => c.status === 'PAUSED')
+  const allPaused = mergedAllTime.length > 0 &&
+    mergedAllTime.every(c => c.status === 'PAUSED')
 
   // Warn about queries that failed
   for (const [label, result] of [
-    ['campaigns(period)', campaignPeriodRows],
+    ['campaigns(period)',  campaignPeriodRows],
     ['campaigns(alltime)', campaignAllTimeRows],
-    ['keywords', keywordPeriodRows],
-    ['timeSeries', timeSeriesRows],
-    ['calls', callRows],
+    ['keywords',           keywordPeriodRows],
+    ['timeSeries',         timeSeriesRows],
+    ['smartCampaigns',     smartCampaignRows],
+    ['calls',              callRows],
   ] as const) {
     if (result.status === 'rejected') {
       console.warn(`[Google Ads] ${label} failed:`, (result as any).reason?.message)
@@ -383,7 +422,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
     totals,
     totalsAllTime,
     campaigns,
-    campaignsAllTime,
+    campaignsAllTime: mergedAllTime,
     keywords,
     timeSeries,
     callConversions,
