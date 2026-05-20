@@ -10,6 +10,7 @@ async function get<T>(path: string): Promise<T> {
 export interface GAdsCampaign {
   name:        string
   status:      string
+  channelType: string   // e.g. SEARCH, DISPLAY, SMART, PERFORMANCE_MAX
   spend:       number
   clicks:      number
   impressions: number

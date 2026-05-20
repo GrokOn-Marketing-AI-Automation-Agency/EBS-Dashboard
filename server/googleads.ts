@@ -124,6 +124,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
       SELECT
         campaign.name,
         campaign.status,
+        campaign.advertising_channel_type,
         metrics.impressions,
         metrics.clicks,
         metrics.cost_micros,
@@ -141,6 +142,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
       SELECT
         campaign.name,
         campaign.status,
+        campaign.advertising_channel_type,
         metrics.impressions,
         metrics.clicks,
         metrics.cost_micros,
@@ -171,7 +173,7 @@ export async function getGoogleAdsSummary(range?: string | null) {
       LIMIT 15
     `),
 
-    // 4. Daily time series for chart
+    // 4. Daily time series for chart (all non-removed campaigns incl. Smart)
     gaqlSearch(`
       SELECT
         segments.date,
@@ -202,12 +204,14 @@ export async function getGoogleAdsSummary(range?: string | null) {
   ])
 
   // ── Period campaigns ──────────────────────────────────────────────────────
+  // No zero-metrics filter — include all non-removed campaigns so paused or
+  // low-activity campaigns (e.g. Smart Campaigns) are never silently hidden.
   const campaignsPeriod = campaignPeriodRows.status === 'fulfilled'
     ? campaignPeriodRows.value
-        .filter((r: any) => Number(r.metrics?.costMicros ?? 0) > 0 || Number(r.metrics?.impressions ?? 0) > 0)
         .map((r: any) => ({
-          name:        r.campaign?.name        ?? 'Unknown',
-          status:      r.campaign?.status      ?? 'UNKNOWN',
+          name:        r.campaign?.name                  ?? 'Unknown',
+          status:      r.campaign?.status                ?? 'UNKNOWN',
+          channelType: r.campaign?.advertisingChannelType ?? 'UNKNOWN',
           spend:       micro(r.metrics?.costMicros),
           clicks:      Number(r.metrics?.clicks      ?? 0),
           impressions: Number(r.metrics?.impressions ?? 0),
@@ -220,8 +224,9 @@ export async function getGoogleAdsSummary(range?: string | null) {
   // ── All-time campaigns ────────────────────────────────────────────────────
   const campaignsAllTime = campaignAllTimeRows.status === 'fulfilled'
     ? campaignAllTimeRows.value.map((r: any) => ({
-        name:        r.campaign?.name        ?? 'Unknown',
-        status:      r.campaign?.status      ?? 'UNKNOWN',
+        name:        r.campaign?.name                  ?? 'Unknown',
+        status:      r.campaign?.status                ?? 'UNKNOWN',
+        channelType: r.campaign?.advertisingChannelType ?? 'UNKNOWN',
         spend:       micro(r.metrics?.costMicros),
         clicks:      Number(r.metrics?.clicks      ?? 0),
         impressions: Number(r.metrics?.impressions ?? 0),
@@ -231,9 +236,13 @@ export async function getGoogleAdsSummary(range?: string | null) {
       }))
     : []
 
-  // Show period campaigns if any have data, otherwise fall back to all-time
-  const hasPeriodData = campaignsPeriod.length > 0
-  const campaigns     = hasPeriodData ? campaignsPeriod : campaignsAllTime
+  // Show period campaigns if any have spend/impressions, otherwise fall back to all-time.
+  // We check for actual activity (not just row existence) to avoid showing a wall of
+  // zero-metric campaigns when the date range has no data.
+  const hasPeriodData = campaignsPeriod.some(
+    c => c.spend > 0 || c.impressions > 0 || c.clicks > 0
+  )
+  const campaigns = hasPeriodData ? campaignsPeriod : campaignsAllTime
 
   // ── Totals ────────────────────────────────────────────────────────────────
   function sumCampaigns(list: typeof campaigns) {

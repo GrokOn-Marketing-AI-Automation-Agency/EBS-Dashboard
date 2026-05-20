@@ -486,9 +486,12 @@ export function ROIAttribution() {
           ) : (
             <div className="divide-y divide-gray-50 dark:divide-slate-800">
               {filteredCampaigns.map(c => {
-                const maxSpend = Math.max(...filteredCampaigns.map(x => x.spend), 1)
-                const pct      = maxSpend > 0 ? Math.round((c.spend / maxSpend) * 100) : 0
-                const isPaused = c.status !== 'ENABLED'
+                const maxSpend  = Math.max(...filteredCampaigns.map(x => x.spend), 1)
+                const pct       = maxSpend > 0 ? Math.round((c.spend / maxSpend) * 100) : 0
+                const isPaused  = c.status !== 'ENABLED'
+                const isSmart   = c.channelType === 'SMART'
+                const isPmax    = c.channelType === 'PERFORMANCE_MAX'
+                const hasNoData = c.spend === 0 && c.clicks === 0 && c.impressions === 0
                 return (
                   <div key={c.name} className="px-5 py-3.5">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -502,9 +505,24 @@ export function ROIAttribution() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
+                        {isSmart && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">
+                            Smart
+                          </span>
+                        )}
+                        {isPmax && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">
+                            PMax
+                          </span>
+                        )}
                         {isPaused && (
                           <span className="text-[9px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
                             Paused
+                          </span>
+                        )}
+                        {hasNoData && !isPaused && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5">
+                            No data
                           </span>
                         )}
                         <span className="text-sm font-bold text-gray-700 dark:text-slate-200">{fmt.currencyExact(c.spend)}</span>
