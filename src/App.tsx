@@ -25,7 +25,7 @@ function AccuLynxBanner() {
   if (!status) return null
   if (status.connected) return null
   return (
-    <div className="mx-5 mt-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+    <div className="mx-3 sm:mx-5 mt-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
       <span>⚠</span>
       <span>
         <strong>AccuLynx running in mock mode</strong> — {status.reason}.{' '}
@@ -47,7 +47,7 @@ function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         <AccuLynxBanner />
-        <main className="flex-1 overflow-y-auto p-5 space-y-7">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-7">
 
           <UnifiedMetrics />
           <DiscrepancyAlerts />

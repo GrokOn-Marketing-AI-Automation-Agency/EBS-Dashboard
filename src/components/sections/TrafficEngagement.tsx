@@ -150,7 +150,7 @@ export function TrafficEngagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
         {/* ── GA4 Panel ── */}
         <div className={cn('bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-4 shadow-sm transition-opacity', !sources.ga4 && 'opacity-40')}>
@@ -308,36 +308,38 @@ export function TrafficEngagement() {
             <p className="text-sm font-semibold text-gray-700 dark:text-slate-200">Top Landing Pages · GA4</p>
             <span className="text-xs text-gray-400 dark:text-slate-500">by sessions</span>
           </div>
-          <table className="w-full text-xs">
-            <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
-              <tr>
-                <th className="text-left px-4 py-2">Page</th>
-                <th className="text-right px-4 py-2">Sessions</th>
-                <th className="text-right px-4 py-2">Users</th>
-                <th className="text-right px-4 py-2">Views</th>
-                <th className="text-right px-4 py-2">Bounce</th>
-                <th className="text-right px-4 py-2">Avg Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
-              {data.topPages.map((pg, i) => (
-                <tr key={`${pg.page}-${i}`} className="hover:bg-gray-50 dark:hover:bg-slate-800">
-                  <td className="px-4 py-2.5 font-medium text-gray-700 dark:text-slate-200 max-w-[220px] truncate" title={pg.page}>
-                    {pg.page === '/' ? '/ (homepage)' : pg.page}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-gray-700 dark:text-slate-200 font-semibold">{pg.sessions.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{pg.users.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{pg.pageViews.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    <span className={cn('font-medium', pg.bounceRate > 60 ? 'text-red-500' : pg.bounceRate > 40 ? 'text-amber-500' : 'text-green-600')}>
-                      {pg.bounceRate}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-gray-500 dark:text-slate-400">{fmtDuration(pg.avgDuration)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[540px]">
+              <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
+                <tr>
+                  <th className="text-left px-4 py-2">Page</th>
+                  <th className="text-right px-4 py-2">Sessions</th>
+                  <th className="text-right px-4 py-2">Users</th>
+                  <th className="text-right px-4 py-2">Views</th>
+                  <th className="text-right px-4 py-2">Bounce</th>
+                  <th className="text-right px-4 py-2">Avg Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
+                {data.topPages.map((pg, i) => (
+                  <tr key={`${pg.page}-${i}`} className="hover:bg-gray-50 dark:hover:bg-slate-800">
+                    <td className="px-4 py-2.5 font-medium text-gray-700 dark:text-slate-200 max-w-[220px] truncate" title={pg.page}>
+                      {pg.page === '/' ? '/ (homepage)' : pg.page}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-700 dark:text-slate-200 font-semibold">{pg.sessions.toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{pg.users.toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{pg.pageViews.toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <span className={cn('font-medium', pg.bounceRate > 60 ? 'text-red-500' : pg.bounceRate > 40 ? 'text-amber-500' : 'text-green-600')}>
+                        {pg.bounceRate}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-500 dark:text-slate-400">{fmtDuration(pg.avgDuration)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -353,32 +355,34 @@ export function TrafficEngagement() {
             {!sources.gsc && <span className="text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Source Disabled</span>}
           </div>
         </div>
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
-            <tr>
-              <th className="text-left px-4 py-2">Keyword</th>
-              <th className="text-right px-4 py-2">Clicks</th>
-              <th className="text-right px-4 py-2">Impressions</th>
-              <th className="text-right px-4 py-2">CTR</th>
-              <th className="text-right px-4 py-2">Position</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
-            {GSC_DATA.topKeywords.map(kw => (
-              <tr key={kw.keyword} className="hover:bg-gray-50 dark:hover:bg-slate-800">
-                <td className="px-4 py-2 font-medium text-gray-800 dark:text-slate-100">{kw.keyword}</td>
-                <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.clicks}</td>
-                <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.impressions.toLocaleString()}</td>
-                <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.ctr}%</td>
-                <td className="px-4 py-2 text-right">
-                  <span className={cn('font-semibold', kw.position <= 3 ? 'text-green-600' : kw.position <= 7 ? 'text-amber-600' : 'text-gray-500 dark:text-slate-400')}>
-                    #{kw.position}
-                  </span>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-[400px]">
+            <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
+              <tr>
+                <th className="text-left px-4 py-2">Keyword</th>
+                <th className="text-right px-4 py-2">Clicks</th>
+                <th className="text-right px-4 py-2">Impressions</th>
+                <th className="text-right px-4 py-2">CTR</th>
+                <th className="text-right px-4 py-2">Position</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
+              {GSC_DATA.topKeywords.map(kw => (
+                <tr key={kw.keyword} className="hover:bg-gray-50 dark:hover:bg-slate-800">
+                  <td className="px-4 py-2 font-medium text-gray-800 dark:text-slate-100">{kw.keyword}</td>
+                  <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.clicks}</td>
+                  <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.impressions.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right text-gray-700 dark:text-slate-200">{kw.ctr}%</td>
+                  <td className="px-4 py-2 text-right">
+                    <span className={cn('font-semibold', kw.position <= 3 ? 'text-green-600' : kw.position <= 7 ? 'text-amber-600' : 'text-gray-500 dark:text-slate-400')}>
+                      #{kw.position}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   )

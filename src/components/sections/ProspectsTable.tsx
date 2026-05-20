@@ -66,7 +66,8 @@ export function ProspectsTable() {
         )}
 
         {!loading && prospects.length > 0 && (
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-[700px]">
             <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
               <tr>
                 <th className="text-left px-4 py-2.5">Name</th>
@@ -100,6 +101,7 @@ export function ProspectsTable() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
 
         {!loading && !error && prospects.length === 0 && (

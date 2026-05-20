@@ -108,7 +108,8 @@ export function SourceComparison() {
           <p className="text-sm font-semibold text-gray-700 dark:text-slate-200">Lead Source Breakdown</p>
           <span className="text-xs text-gray-400 dark:text-slate-500">AccuLynx / Google Ads / GROMAAP</span>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
           <thead className="bg-gray-50 dark:bg-slate-800 text-xs text-gray-500 dark:text-slate-400 uppercase">
             <tr>
               <th className="text-left px-4 py-2">Source</th>
@@ -141,6 +142,7 @@ export function SourceComparison() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </section>
   )

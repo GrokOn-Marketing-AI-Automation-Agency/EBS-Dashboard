@@ -11,6 +11,8 @@ interface DashboardContextValue {
   syncState: SyncState
   theme: 'light' | 'dark'
   activeClient: ClientConfig
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
   setActiveClientId: (id: string) => void
   toggleSource: (key: keyof DataSourceState) => void
   setDateRange: (r: DateRange) => void
@@ -45,6 +47,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [dateRange, setDateRange] = useState<DateRange>('7d')
   const [compareMode, setCompareMode] = useState<CompareMode>('wow')
   const [syncState, setSyncState] = useState<SyncState>({ status: 'idle', lastSync: 'May 11, 2026 9:00 AM' })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme')
     return saved === 'dark' ? 'dark' : 'light'
@@ -84,7 +88,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [syncState.lastSync])
 
   return (
-    <DashboardContext.Provider value={{ sources, dateRange, compareMode, syncState, theme, activeClient, setActiveClientId: handleSetActiveClientId, toggleSource, setDateRange, setCompareMode, triggerSync, toggleTheme }}>
+    <DashboardContext.Provider value={{ sources, dateRange, compareMode, syncState, theme, activeClient, sidebarOpen, setSidebarOpen, setActiveClientId: handleSetActiveClientId, toggleSource, setDateRange, setCompareMode, triggerSync, toggleTheme }}>
       {children}
     </DashboardContext.Provider>
   )

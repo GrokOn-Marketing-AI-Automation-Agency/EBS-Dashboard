@@ -84,7 +84,7 @@ export function LeadSourceBreakdown() {
       )}
 
       {!loading && rows.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-4 shadow-sm">
             <p className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">Leads by Source</p>
             <ResponsiveContainer width="100%" height={220}>
@@ -115,7 +115,8 @@ export function LeadSourceBreakdown() {
             <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700">
               <p className="text-sm font-semibold text-gray-700 dark:text-slate-200">Performance by Source</p>
             </div>
-            <table className="w-full text-xs">
+            <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[380px]">
               <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 uppercase">
                 <tr>
                   <th className="text-left px-3 py-2">Source</th>
@@ -160,6 +161,7 @@ export function LeadSourceBreakdown() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -169,7 +171,7 @@ export function LeadSourceBreakdown() {
 
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 animate-pulse">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
       <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-4 shadow-sm h-64">
         <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-40 mb-4" />
         <div className="flex items-end gap-3 h-40 mt-6">

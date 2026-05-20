@@ -179,8 +179,8 @@ export function SearchConsole() {
                   </button>
                 ))}
               </div>
-              <div className="overflow-y-auto max-h-72">
-                <table className="w-full text-xs">
+              <div className="overflow-x-auto overflow-y-auto max-h-72">
+                <table className="w-full text-xs min-w-[340px]">
                   <thead className="bg-gray-50 dark:bg-slate-900 text-gray-400 dark:text-slate-500 uppercase tracking-wide sticky top-0">
                     <tr>
                       <th className="text-left px-4 py-2">{tab === 'queries' ? 'Query' : 'Page'}</th>

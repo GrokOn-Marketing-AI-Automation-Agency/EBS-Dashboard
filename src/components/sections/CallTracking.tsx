@@ -70,7 +70,7 @@ export function CallTracking() {
             GROMAAP source is disabled — enable it in the sidebar to see call data
           </div>
         )}
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
             { label: 'Total Calls',  value: total.toLocaleString(),            color: 'text-gray-900 dark:text-white'  },
             { label: 'Answered',     value: `${answered.toLocaleString()} (${ansRate}%)`, color: 'text-green-700' },
@@ -84,7 +84,7 @@ export function CallTracking() {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-4 shadow-sm">
             <p className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">Calls by Source</p>
             <ResponsiveContainer width="100%" height={200}>

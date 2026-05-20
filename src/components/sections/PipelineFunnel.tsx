@@ -32,8 +32,8 @@ export function PipelineFunnel() {
       )}
 
       {!loading && stages.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-5 shadow-sm">
             <p className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-4">AccuLynx Pipeline Stages</p>
             <div className="space-y-2">
               {stages.map((stage, i) => {
@@ -90,8 +90,8 @@ export function PipelineFunnel() {
 
 function PipelineSkeleton() {
   return (
-    <div className="grid grid-cols-3 gap-4 animate-pulse">
-      <div className="col-span-2 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-5 shadow-sm space-y-3">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-pulse">
+      <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl p-5 shadow-sm space-y-3">
         <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-40 mb-4" />
         {[100, 80, 60, 40, 25].map((w, i) => (
           <div key={i} className="flex items-center gap-3">
