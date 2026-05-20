@@ -236,13 +236,25 @@ export async function getGoogleAdsSummary(range?: string | null) {
       }))
     : []
 
-  // Show period campaigns if any have spend/impressions, otherwise fall back to all-time.
-  // We check for actual activity (not just row existence) to avoid showing a wall of
-  // zero-metric campaigns when the date range has no data.
+  // Merge strategy: all-time gives the complete campaign roster (Smart Campaigns
+  // and other types the API silently drops from date-filtered queries).
+  // For each all-time campaign, overlay period metrics if available; otherwise
+  // keep it visible with zero period metrics so it's never hidden.
   const hasPeriodData = campaignsPeriod.some(
     c => c.spend > 0 || c.impressions > 0 || c.clicks > 0
   )
-  const campaigns = hasPeriodData ? campaignsPeriod : campaignsAllTime
+
+  const periodByName = new Map(campaignsPeriod.map(c => [c.name, c]))
+
+  const campaigns = hasPeriodData
+    ? campaignsAllTime.map(c => {
+        const period = periodByName.get(c.name)
+        if (period) return period
+        // Campaign exists in account but absent from period query (e.g. Smart Campaign):
+        // show it with zero period metrics so it is never invisible
+        return { ...c, spend: 0, clicks: 0, impressions: 0, conversions: 0, ctr: 0, avgCpc: 0 }
+      })
+    : campaignsAllTime
 
   // ── Totals ────────────────────────────────────────────────────────────────
   function sumCampaigns(list: typeof campaigns) {
