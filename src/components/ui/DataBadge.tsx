@@ -2,12 +2,15 @@ interface Props {
   source:      'live' | 'mock'
   dataSource?: 'report' | 'jobs'
   lastSync?:   string
+  label?:      string   // override the auto-generated label
 }
 
-export function DataBadge({ source, dataSource, lastSync }: Props) {
-  const label = source === 'live'
-    ? dataSource === 'report' ? 'Live · Report CSV' : 'Live · AccuLynx'
-    : 'Mock data'
+export function DataBadge({ source, dataSource, lastSync, label: labelProp }: Props) {
+  const label = labelProp ?? (
+    source === 'live'
+      ? dataSource === 'report' ? 'Live · Report CSV' : 'Live · AccuLynx'
+      : 'Mock data'
+  )
 
   const title = [
     lastSync ? `Last synced: ${new Date(lastSync).toLocaleString()}` : null,

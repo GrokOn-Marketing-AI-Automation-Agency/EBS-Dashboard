@@ -218,7 +218,7 @@ export function GoHighLevel() {
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">GoHighLevel · Contacts, pipeline, conversations &amp; automations</p>
         </div>
         <div className="flex items-center gap-2">
-          {data && <DataBadge source={data.source} lastSync={data.lastSync} />}
+          {data && <DataBadge source={data.source} lastSync={data.lastSync} label={data.source === 'live' ? 'Live · GHL' : 'Mock data'} />}
           <button
             onClick={refetch}
             className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:text-slate-200 transition-colors"
