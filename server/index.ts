@@ -1106,16 +1106,23 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // ── /api/ghl/summary ────────────────────────────────────
   if (url.pathname === '/api/ghl/summary') {
-    const range = url.searchParams.get('range') ?? '30d'
-    if (!ghlConfigured()) {
-      console.warn('[GHL] credentials not configured — returning mock')
+    const range    = url.searchParams.get('range')    ?? '30d'
+    const clientId = url.searchParams.get('clientId') ?? 'ebs'
+
+    // Resolve GHL credentials: try client-prefixed env vars first, fall back to defaults
+    const prefix   = clientId.toUpperCase()
+    const ghlKey   = process.env[`${prefix}_GHL_API_KEY`]    ?? process.env.GHL_API_KEY    ?? ''
+    const ghlLocId = process.env[`${prefix}_GHL_LOCATION_ID`] ?? process.env.GHL_LOCATION_ID ?? ''
+
+    if (!ghlKey || !ghlLocId) {
+      console.warn(`[GHL] credentials not configured for client "${clientId}" — returning mock`)
       return json(getMockGHLSummary())
     }
+
     try {
-      // Fetch AccuLynx report CSV in parallel so we can cross-reference the
-      // AccuLynx pipeline's $0 monetaryValues with real contract values from CRM.
+      // For EBS, cross-reference AccuLynx pipeline values. Skip for other clients.
       let acculynxValueMap: Map<string, number> | undefined
-      if (API_KEY) {
+      if (clientId === 'ebs' && API_KEY) {
         try {
           const reportFiles = await fetchLatestReportFiles(SCHEDULE_ID)
           if (reportFiles?.leadStatusUrl) {
@@ -1129,11 +1136,11 @@ async function handleRequest(req: Request): Promise<Response> {
         }
       }
 
-      const data = await getGHLSummary(range, acculynxValueMap)
-      console.log(`[GHL] Summary fetched — ${data.contacts.total} contacts, ${data.pipelines.reduce((a,p)=>a+p.total,0)} opps`)
+      const data = await getGHLSummary(range, acculynxValueMap, ghlKey, ghlLocId)
+      console.log(`[GHL:${clientId}] Summary fetched — ${data.contacts.total} contacts, ${data.pipelines.reduce((a,p)=>a+p.total,0)} opps`)
       return json(data)
     } catch (e: any) {
-      console.error('[GHL] summary error:', e.message)
+      console.error(`[GHL:${clientId}] summary error:`, e.message)
       return json({ ...getMockGHLSummary(), source: 'mock', error: e.message })
     }
   }

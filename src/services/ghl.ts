@@ -70,5 +70,11 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const ghlService = {
-  summary: (range?: string) => get<GHLSummary>(`/summary${range ? `?range=${range}` : ''}`),
+  summary: (range?: string, clientId?: string) => {
+    const params = new URLSearchParams()
+    if (range)    params.set('range',    range)
+    if (clientId) params.set('clientId', clientId)
+    const qs = params.toString()
+    return get<GHLSummary>(`/summary${qs ? `?${qs}` : ''}`)
+  },
 }

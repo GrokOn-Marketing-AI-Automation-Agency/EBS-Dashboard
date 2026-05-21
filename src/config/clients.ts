@@ -56,15 +56,15 @@ export const CLIENTS: ClientConfig[] = [
     industry:  'Technology',
     color:     'bg-violet-600',
     textColor: 'text-white',
-    live:      false,           // flip to true once API keys are added in Azure
+    live:      true,
     sources: {
       acculynx:  false,
-      googleAds: true,
-      ga4:       true,
-      gsc:       true,
+      googleAds: false,
+      ga4:       false,
+      gsc:       false,
       highlevel: true,
       lsa:       false,
-      clarity:   true,
+      clarity:   false,
     },
   },
 ]

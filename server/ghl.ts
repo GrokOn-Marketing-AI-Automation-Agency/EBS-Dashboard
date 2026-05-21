@@ -12,6 +12,26 @@ export function isConfigured(): boolean {
   return !!(GHL_API_KEY && GHL_LOC_ID)
 }
 
+/** Creates a GHL HTTP helper bound to the given API key. */
+function makeGet(apiKey: string) {
+  return async function get<T = any>(path: string, params?: Record<string, string>): Promise<T> {
+    const url = new URL(`${GHL_BASE}${path}`)
+    if (params) Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v))
+    const res = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Version':       '2021-07-28',
+        'Content-Type':  'application/json',
+      },
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      throw new Error(`GHL ${path} → ${res.status}: ${body.slice(0, 200)}`)
+    }
+    return res.json()
+  }
+}
+
 // ── Pipeline stage name maps (from probe) ─────────────────────────────────────
 export const PIPELINE_NAMES: Record<string, string> = {
   DXnD9yfAsrj1hrisrSEO: '$150 Off Pipeline',
@@ -24,25 +44,8 @@ export const PIPELINE_NAMES: Record<string, string> = {
   s8SYCJqjuuYzVgjBnXCB: 'Trash',
 }
 
-// ── HTTP helper ───────────────────────────────────────────────────────────────
-async function ghlGet<T = any>(path: string, params?: Record<string, string>): Promise<T> {
-  const url = new URL(`${GHL_BASE}${path}`)
-  if (params) Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v))
-
-  const res = await fetch(url.toString(), {
-    headers: {
-      'Authorization': `Bearer ${GHL_API_KEY}`,
-      'Version':       '2021-07-28',
-      'Content-Type':  'application/json',
-    },
-  })
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`GHL ${path} → ${res.status}: ${body.slice(0, 200)}`)
-  }
-  return res.json()
-}
+// ── HTTP helper (default EBS client) ─────────────────────────────────────────
+const ghlGet = makeGet(GHL_API_KEY)
 
 // ── Date range helpers ────────────────────────────────────────────────────────
 function getDateRange(range = '30d'): { startDate: Date; endDate: Date } {
@@ -157,15 +160,22 @@ const ACCULYNX_PIPELINE_ID = 'VSb1gZvTs03F7gFy31eX'
 
 // ── Main export ───────────────────────────────────────────────────────────────
 /**
- * @param range         Date range for contact/conversation filters ('7d'|'30d'|'90d')
+ * @param range             Date range for contact/conversation filters ('7d'|'30d'|'90d')
  * @param acculynxValueMap  Optional last-name → contract value map built from AccuLynx
  *                          report CSV.  When provided, replaces the always-$0
  *                          monetaryValue for the AccuLynx pipeline opportunities.
+ * @param apiKey            Override GHL API key (defaults to GHL_API_KEY env var)
+ * @param locationId        Override GHL location ID (defaults to GHL_LOCATION_ID env var)
  */
 export async function getGHLSummary(
   range = '30d',
   acculynxValueMap?: Map<string, number>,
+  apiKey?: string,
+  locationId?: string,
 ): Promise<GHLSummary> {
+  const get    = apiKey ? makeGet(apiKey) : ghlGet
+  const locId  = locationId ?? GHL_LOC_ID
+
   const { startDate, endDate } = getDateRange(range)
 
   const [
@@ -178,30 +188,33 @@ export async function getGHLSummary(
     callsData,
     workflowsData,
     calendarsData,
+    locationData,
   ] = await Promise.allSettled([
     // Total contacts count (limit=1 just to get meta.total)
-    ghlGet<any>('/contacts/', { locationId: GHL_LOC_ID, limit: '1' }),
+    get<any>('/contacts/', { locationId: locId, limit: '1' }),
     // New contacts in period count
-    ghlGet<any>('/contacts/', {
-      locationId: GHL_LOC_ID,
+    get<any>('/contacts/', {
+      locationId: locId,
       limit:      '1',
       startDate:  iso(startDate),
       endDate:    iso(endDate),
     }),
     // 100 contacts for type/source breakdown sample
-    ghlGet<any>('/contacts/', { locationId: GHL_LOC_ID, limit: '100' }),
+    get<any>('/contacts/', { locationId: locId, limit: '100' }),
     // All opportunities — paginate up to 500 for stage breakdown
-    ghlGet<any>('/opportunities/search', { location_id: GHL_LOC_ID, limit: '100' }),
+    get<any>('/opportunities/search', { location_id: locId, limit: '100' }),
     // Pipelines (for stage name lookup)
-    ghlGet<any>('/opportunities/pipelines', { locationId: GHL_LOC_ID }),
+    get<any>('/opportunities/pipelines', { locationId: locId }),
     // Recent conversations (all types, for list display)
-    ghlGet<any>('/conversations/search', { locationId: GHL_LOC_ID, limit: '50' }),
+    get<any>('/conversations/search', { locationId: locId, limit: '50' }),
     // Phone calls total (TYPE_PHONE gives real call count)
-    ghlGet<any>('/conversations/search', { locationId: GHL_LOC_ID, limit: '1', type: 'TYPE_PHONE' }),
+    get<any>('/conversations/search', { locationId: locId, limit: '1', type: 'TYPE_PHONE' }),
     // Workflows
-    ghlGet<any>('/workflows/', { locationId: GHL_LOC_ID }),
+    get<any>('/workflows/', { locationId: locId }),
     // Calendars (for upcoming appointments)
-    ghlGet<any>('/calendars/', { locationId: GHL_LOC_ID }),
+    get<any>('/calendars/', { locationId: locId }),
+    // Location name
+    get<any>(`/locations/${locId}`).catch(() => null),
   ])
 
   // ── Contacts ───────────────────────────────────────────────────────────────
@@ -248,8 +261,8 @@ export async function getGHLSummary(
     // Fetch up to 30 more pages (3,000 additional) — covers any realistic opp count
     for (let page = 0; page < 30 && startAfter; page++) {
       try {
-        const more = await ghlGet<any>('/opportunities/search', {
-          location_id:  GHL_LOC_ID,
+        const more = await get<any>('/opportunities/search', {
+          location_id:  locId,
           limit:        '100',
           startAfter:   String(startAfter),
           startAfterId: startAfterId ?? '',
@@ -390,8 +403,8 @@ export async function getGHLSummary(
 
   await Promise.allSettled(
     calList.slice(0, 5).map(cal =>
-      ghlGet<any>('/calendars/events', {
-        locationId:  GHL_LOC_ID,
+      get<any>('/calendars/events', {
+        locationId:  locId,
         calendarId:  cal.id,
         startTime:   now.toString(),
         endTime:     future.toString(),
@@ -415,10 +428,15 @@ export async function getGHLSummary(
     })),
   }
 
+  const resolvedLocationName =
+    (locationData.status === 'fulfilled' && locationData.value?.location?.name) ||
+    (locationData.status === 'fulfilled' && locationData.value?.name) ||
+    'GROMAAP'
+
   return {
     source:       'live',
     lastSync:     new Date().toISOString(),
-    locationName: 'Exterior Building Solutions',
+    locationName: resolvedLocationName,
     totalOpps:    totalOppsCount,
     totalCalls,
     contacts,

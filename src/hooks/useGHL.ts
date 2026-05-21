@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ghlService, type GHLSummary } from '../services/ghl'
+import { useDashboard } from '../context/DashboardContext'
 
 export function useGHLSummary(range?: string) {
+  const { activeClient } = useDashboard()
   const [data,    setData]    = useState<GHLSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
@@ -10,7 +12,7 @@ export function useGHLSummary(range?: string) {
     setLoading(true)
     setError(null)
     try {
-      const result = await ghlService.summary(range)
+      const result = await ghlService.summary(range, activeClient.id)
       setData(result)
       if (result.error) setError(result.error)
       // Persist summary for chat widget context
@@ -39,7 +41,7 @@ export function useGHLSummary(range?: string) {
     } finally {
       setLoading(false)
     }
-  }, [range])
+  }, [range, activeClient.id])
 
   useEffect(() => { fetch() }, [fetch])
 
