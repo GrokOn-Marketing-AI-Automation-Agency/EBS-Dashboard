@@ -5,26 +5,43 @@ import { CLIENTS } from '../../config/clients'
 import { cn } from '../../utils/format'
 import gromaapLogo from '../../assets/agencygro-logo.png'
 
-const NAV_ITEMS = [
-  { label: 'Overview',           id: 'kpi'              },
-  { label: 'Discrepancy Alerts', id: 'alerts'           },
-  { label: 'Attribution Gaps',   id: 'attribution-gaps' },
-  { label: 'Source Comparison',  id: 'comparison'       },
-  { label: 'Lead Sources',       id: 'leads'            },
-  { label: 'Pipeline',           id: 'pipeline'         },
-  { label: 'Traffic',            id: 'traffic'          },
-  { label: 'Search Console',     id: 'search-console'   },
-  { label: 'Clarity',            id: 'clarity'          },
-  { label: 'Calls',              id: 'calls'            },
-  { label: 'Local Service Ads',  id: 'lsa'              },
-  { label: 'ROI',                id: 'roi'              },
-  { label: 'GROMAAP',            id: 'ghl'              },
-  { label: 'Data Quality',       id: 'quality'          },
+const ALL_NAV_ITEMS = [
+  { label: 'Overview',           id: 'kpi',              requires: 'full'       },
+  { label: 'Discrepancy Alerts', id: 'alerts',           requires: 'full'       },
+  { label: 'Attribution Gaps',   id: 'attribution-gaps', requires: 'acculynx'   },
+  { label: 'Source Comparison',  id: 'comparison',       requires: 'full'       },
+  { label: 'Lead Sources',       id: 'leads',            requires: 'acculynx'   },
+  { label: 'Pipeline',           id: 'pipeline',         requires: 'acculynx'   },
+  { label: 'Traffic',            id: 'traffic',          requires: 'traffic'    },
+  { label: 'Search Console',     id: 'search-console',   requires: 'gsc'        },
+  { label: 'Clarity',            id: 'clarity',          requires: 'clarity'    },
+  { label: 'Calls',              id: 'calls',            requires: 'full'       },
+  { label: 'Local Service Ads',  id: 'lsa',              requires: 'lsa'        },
+  { label: 'ROI',                id: 'roi',              requires: 'paid'       },
+  { label: 'GROMAAP',            id: 'ghl',              requires: 'highlevel'  },
+  { label: 'Data Quality',       id: 'quality',          requires: 'full'       },
 ]
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const { sources, toggleSource, theme, toggleTheme, activeClient, setActiveClientId } = useDashboard()
   const [clientMenuOpen, setClientMenuOpen] = useState(false)
+  const cfg = activeClient.sources
+
+  const isFullClient = cfg.acculynx || cfg.googleAds || cfg.ga4 || cfg.gsc || cfg.clarity || cfg.lsa
+
+  const navItems = ALL_NAV_ITEMS.filter(item => {
+    switch (item.requires) {
+      case 'full':      return isFullClient
+      case 'acculynx':  return cfg.acculynx
+      case 'gsc':       return cfg.gsc
+      case 'clarity':   return cfg.clarity
+      case 'lsa':       return cfg.lsa
+      case 'paid':      return cfg.googleAds || cfg.lsa
+      case 'traffic':   return cfg.ga4 || cfg.gsc || cfg.clarity
+      case 'highlevel': return cfg.highlevel
+      default:          return true
+    }
+  })
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -50,9 +67,9 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       <div className="px-3 py-4 flex-1">
-        <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">Data Sources</p>
-        <div className="space-y-0.5 mb-5">
-          {DATA_SOURCES.map(ds => {
+        {isFullClient && <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">Data Sources</p>}
+        <div className={cn('space-y-0.5', isFullClient ? 'mb-5' : 'mb-0')}>
+          {isFullClient && DATA_SOURCES.map(ds => {
             const active = sources[ds.key]
             return (
               <button
@@ -80,7 +97,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
         <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">Jump To</p>
         <div className="space-y-0.5">
-          {NAV_ITEMS.map(nav => (
+          {navItems.map(nav => (
             <button
               key={nav.id}
               onClick={() => scrollTo(nav.id)}

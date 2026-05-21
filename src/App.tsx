@@ -36,10 +36,24 @@ function AccuLynxBanner() {
 }
 
 function Dashboard() {
-  const { sources } = useDashboard()
-  const anyCrmActive    = sources.acculynx || sources.highlevel
-  const anyPaidActive   = sources.googleAds || sources.lsa
+  const { sources, activeClient } = useDashboard()
+  const cfg = activeClient.sources   // what this client actually has configured
+
+  const anyCrmActive     = sources.acculynx || sources.highlevel
+  const anyPaidActive    = sources.googleAds || sources.lsa
   const anyTrafficActive = sources.ga4 || sources.gsc || sources.clarity
+
+  // True if the client has any source beyond GROMAAP — drives multi-source sections
+  const isFullClient = cfg.acculynx || cfg.googleAds || cfg.ga4 || cfg.gsc || cfg.clarity || cfg.lsa
+
+  // Helper: show section when client has it configured; show disabled card when
+  // toggled off; hide completely when the client doesn't have it at all.
+  const section = (
+    has: boolean,
+    active: boolean,
+    live: JSX.Element,
+    disabled: JSX.Element,
+  ) => has ? (active ? live : disabled) : null
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F5F6F7] dark:bg-slate-950">
@@ -49,59 +63,81 @@ function Dashboard() {
         <AccuLynxBanner />
         <main className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-7">
 
-          <UnifiedMetrics />
-          <DiscrepancyAlerts />
+          {isFullClient && <UnifiedMetrics />}
+          {isFullClient && <DiscrepancyAlerts />}
 
-          {sources.acculynx
-            ? <AttributionGaps />
-            : <DisabledSection id="attribution-gaps" label="Google Ads Attribution Gaps" reason="Enable AccuLynx CRM in the sidebar" />}
+          {section(
+            cfg.acculynx, sources.acculynx,
+            <AttributionGaps />,
+            <DisabledSection id="attribution-gaps" label="Google Ads Attribution Gaps" reason="Enable AccuLynx CRM in the sidebar" />,
+          )}
 
-          {anyCrmActive
-            ? <SourceComparison />
-            : <DisabledSection id="comparison" label="Cross-Platform Comparison" reason="Enable AccuLynx or GROMAAP in the sidebar" />}
+          {section(
+            isFullClient, anyCrmActive,
+            <SourceComparison />,
+            <DisabledSection id="comparison" label="Cross-Platform Comparison" reason="Enable AccuLynx or GROMAAP in the sidebar" />,
+          )}
 
-          {sources.acculynx
-            ? <LeadSourceBreakdown />
-            : <DisabledSection id="leads" label="Lead Source Breakdown" reason="Enable AccuLynx CRM in the sidebar" />}
+          {section(
+            cfg.acculynx, sources.acculynx,
+            <LeadSourceBreakdown />,
+            <DisabledSection id="leads" label="Lead Source Breakdown" reason="Enable AccuLynx CRM in the sidebar" />,
+          )}
 
-          {sources.acculynx
-            ? <PipelineFunnel />
-            : <DisabledSection id="pipeline" label="Pipeline & Sales Funnel" reason="Enable AccuLynx CRM in the sidebar" />}
+          {section(
+            cfg.acculynx, sources.acculynx,
+            <PipelineFunnel />,
+            <DisabledSection id="pipeline" label="Pipeline & Sales Funnel" reason="Enable AccuLynx CRM in the sidebar" />,
+          )}
 
-          {sources.acculynx
-            ? <ProspectsTable />
-            : <DisabledSection id="prospects" label="Recent Prospects" reason="Enable AccuLynx CRM in the sidebar" />}
+          {section(
+            cfg.acculynx, sources.acculynx,
+            <ProspectsTable />,
+            <DisabledSection id="prospects" label="Recent Prospects" reason="Enable AccuLynx CRM in the sidebar" />,
+          )}
 
-          {anyTrafficActive
-            ? <TrafficEngagement />
-            : <DisabledSection id="traffic" label="Traffic & Engagement" reason="Enable GA4, Search Console, or Clarity in the sidebar" />}
+          {section(
+            cfg.ga4 || cfg.gsc || cfg.clarity, anyTrafficActive,
+            <TrafficEngagement />,
+            <DisabledSection id="traffic" label="Traffic & Engagement" reason="Enable GA4, Search Console, or Clarity in the sidebar" />,
+          )}
 
-          {sources.gsc
-            ? <SearchConsole />
-            : <DisabledSection id="search-console" label="Google Search Console" reason="Enable Search Console in the sidebar" />}
+          {section(
+            cfg.gsc, sources.gsc,
+            <SearchConsole />,
+            <DisabledSection id="search-console" label="Google Search Console" reason="Enable Search Console in the sidebar" />,
+          )}
 
-          {sources.clarity
-            ? <MicrosoftClarity />
-            : <DisabledSection id="clarity" label="Microsoft Clarity" reason="Enable Microsoft Clarity in the sidebar" />}
+          {section(
+            cfg.clarity, sources.clarity,
+            <MicrosoftClarity />,
+            <DisabledSection id="clarity" label="Microsoft Clarity" reason="Enable Microsoft Clarity in the sidebar" />,
+          )}
 
-          <CallTracking />
+          {isFullClient && <CallTracking />}
 
-          {sources.lsa
-            ? <LocalServiceAds />
-            : <DisabledSection id="lsa" label="Local Service Ads" reason="Enable Local Service Ads in the sidebar" />}
+          {section(
+            cfg.lsa, sources.lsa,
+            <LocalServiceAds />,
+            <DisabledSection id="lsa" label="Local Service Ads" reason="Enable Local Service Ads in the sidebar" />,
+          )}
 
-          {anyPaidActive
-            ? <ROIAttribution />
-            : <DisabledSection id="roi" label="ROI & Attribution" reason="Enable Google Ads or Local Service Ads in the sidebar" />}
+          {section(
+            cfg.googleAds || cfg.lsa, anyPaidActive,
+            <ROIAttribution />,
+            <DisabledSection id="roi" label="ROI & Attribution" reason="Enable Google Ads or Local Service Ads in the sidebar" />,
+          )}
 
-          {sources.highlevel
-            ? <GoHighLevel />
-            : <DisabledSection id="ghl" label="GROMAAP" reason="Enable GROMAAP in the sidebar" />}
+          {section(
+            cfg.highlevel, sources.highlevel,
+            <GoHighLevel />,
+            <DisabledSection id="ghl" label="GROMAAP" reason="Enable GROMAAP in the sidebar" />,
+          )}
 
-          <DataQuality />
+          {isFullClient && <DataQuality />}
 
           <p className="text-center text-xs text-gray-400 dark:text-slate-500 pb-4">
-            Grokon · EBS Dashboard · AccuLynx data is live when API key is set · Other sources connect via Supabase/n8n
+            Grokon Analytics · {activeClient.shortName} · Live data when API keys are configured
           </p>
         </main>
       </div>
