@@ -1220,83 +1220,103 @@ async function handleRequest(req: Request): Promise<Response> {
 
       // Build a rich system prompt from the live dashboard context passed by the frontend
       const ctx = body.context ?? {}
-      const systemPrompt = `You are GROMAAP Assistant — an intelligent marketing performance AI built into the Grokon Dashboard for Exterior Building Solutions (EBS Roofing), a roofing and exterior services company in St. Louis, MO.
+      const clientName = ctx.client?.name ?? 'the client'
+      const clientShort = ctx.client?.shortName ?? clientName
+      const clientIndustry = ctx.client?.industry ?? 'business'
 
-You have access to LIVE data from all 8 connected platforms below. Use specific numbers in your answers.
+      // Build data sections — only include platforms this client actually has data for
+      const dataSections: string[] = []
+      let sectionNum = 1
 
----
-
-## 1. Google Ads (${ctx.gadsRange ?? 'selected period'})
-${ctx.gads ? `- Spend: $${ctx.gads.spend?.toLocaleString()}
+      if (ctx.gads) {
+        dataSections.push(`## ${sectionNum++}. Google Ads (${ctx.gadsRange ?? 'selected period'})
+- Spend: $${ctx.gads.spend?.toLocaleString()}
 - Clicks: ${ctx.gads.clicks?.toLocaleString()} | Impressions: ${ctx.gads.impressions?.toLocaleString()}
 - CTR: ${ctx.gads.ctr}% | Conversions: ${ctx.gads.conversions} | Cost/Conv: $${ctx.gads.costPerConversion}
 - Campaigns active: ${ctx.gads.campaignCount}
 - Top campaign by spend: "${ctx.gads.topCampaign}" ($${ctx.gads.topCampaignSpend?.toLocaleString()})
-${ctx.gads.campaigns?.length ? `- All campaigns:\n${ctx.gads.campaigns.map((c: any) => `  • ${c.name}: $${c.spend?.toLocaleString()} spend, ${c.clicks} clicks, ${c.conversions} conv, ${c.ctr}% CTR (${c.status})`).join('\n')}` : ''}` : 'Not available — Google Ads not connected or loading'}
+${ctx.gads.campaigns?.length ? `- All campaigns:\n${ctx.gads.campaigns.map((c: any) => `  • ${c.name}: $${c.spend?.toLocaleString()} spend, ${c.clicks} clicks, ${c.conversions} conv, ${c.ctr}% CTR (${c.status})`).join('\n')}` : ''}`)
+      }
 
-## 2. Google Local Service Ads / LSA (${ctx.gadsRange ?? 'selected period'})
-${ctx.lsa ? `- Total Leads: ${ctx.lsa.totalLeads} | Charged: ${ctx.lsa.chargedLeads} (${ctx.lsa.totalLeads > 0 ? Math.round(ctx.lsa.chargedLeads/ctx.lsa.totalLeads*100) : 0}%)
+      if (ctx.lsa) {
+        dataSections.push(`## ${sectionNum++}. Google Local Service Ads (${ctx.gadsRange ?? 'selected period'})
+- Total Leads: ${ctx.lsa.totalLeads} | Charged: ${ctx.lsa.chargedLeads} (${ctx.lsa.totalLeads > 0 ? Math.round(ctx.lsa.chargedLeads/ctx.lsa.totalLeads*100) : 0}%)
 - Phone Calls: ${ctx.lsa.phoneCalls} | Messages: ${ctx.lsa.messages}
-- Status — New: ${ctx.lsa.newLeads} | Active: ${ctx.lsa.activeLeads} | Declined: ${ctx.lsa.declinedLeads}
 - Spend: $${ctx.lsa.spend?.toLocaleString()} | Cost per Charged Lead: $${ctx.lsa.chargedLeads > 0 ? Math.round(ctx.lsa.spend / ctx.lsa.chargedLeads) : 'N/A'}
-- Impressions: ${ctx.lsa.impressions?.toLocaleString()} | Clicks: ${ctx.lsa.clicks?.toLocaleString()}
-${ctx.lsa.categories?.length ? `- By service:\n${ctx.lsa.categories.map((c: any) => `  • ${c.category}: ${c.total} leads (${c.calls} calls, ${c.messages} msgs, ${c.charged} charged)`).join('\n')}` : ''}` : 'Not connected'}
+${ctx.lsa.categories?.length ? `- By service:\n${ctx.lsa.categories.map((c: any) => `  • ${c.category}: ${c.total} leads (${c.calls} calls, ${c.charged} charged)`).join('\n')}` : ''}`)
+      }
 
-## 3. AccuLynx CRM
-${ctx.acculynx ? `- Total Jobs on file: ${ctx.acculynx.totalJobs?.toLocaleString()} | Live job count: ${ctx.acculynx.liveJobCount?.toLocaleString()}
+      if (ctx.acculynx) {
+        dataSections.push(`## ${sectionNum++}. AccuLynx CRM
+- Total Jobs: ${ctx.acculynx.totalJobs?.toLocaleString()} | Live job count: ${ctx.acculynx.liveJobCount?.toLocaleString()}
 - Total Pipeline Value: $${ctx.acculynx.pipelineValue?.toLocaleString()}
 - Top Lead Source: ${ctx.acculynx.topSource} (${ctx.acculynx.topSourceJobs} jobs, $${ctx.acculynx.topSourceValue?.toLocaleString()}, ${ctx.acculynx.topSourceCloseRate}% close rate)
 ${ctx.acculynx.leadSources?.length ? `- All lead sources:\n${ctx.acculynx.leadSources.map((s: any) => `  • ${s.source}: ${s.acculynx} jobs, $${s.totalValue?.toLocaleString()} value, ${s.closingPct}% close rate`).join('\n')}` : ''}
-${ctx.acculynx.pipeline?.length ? `- Pipeline stages:\n${ctx.acculynx.pipeline.map((s: any) => `  • ${s.stage}: ${s.count} jobs, $${s.value?.toLocaleString()}`).join('\n')}` : ''}` : 'Not available'}
+${ctx.acculynx.pipeline?.length ? `- Pipeline stages:\n${ctx.acculynx.pipeline.map((s: any) => `  • ${s.stage}: ${s.count} jobs, $${s.value?.toLocaleString()}`).join('\n')}` : ''}`)
+      }
 
-## 4. GoHighLevel / GROMAAP CRM (${ctx.gadsRange ?? 'selected period'})
-${ctx.ghl ? `- Total Contacts: ${ctx.ghl.totalContacts?.toLocaleString()} | New this period: ${ctx.ghl.newContacts}
+      if (ctx.ghl) {
+        dataSections.push(`## ${sectionNum++}. GoHighLevel / GROMAAP CRM (${ctx.gadsRange ?? 'selected period'})
+- Total Contacts: ${ctx.ghl.totalContacts?.toLocaleString()} | New this period: ${ctx.ghl.newContacts}
 - Leads: ${ctx.ghl.leads?.toLocaleString()} | Customers: ${ctx.ghl.customers?.toLocaleString()}
 - Total Opportunities: ${ctx.ghl.totalOpps?.toLocaleString()} | Total Value: $${ctx.ghl.totalValue?.toLocaleString()}
 - Conversations: ${ctx.ghl.conversations?.toLocaleString()} (${ctx.ghl.unreadConversations} unread)
 - Active Workflows: ${ctx.ghl.activeWorkflows} | Upcoming Appointments: ${ctx.ghl.upcomingAppointments}
-- AccuLynx Pipeline: ${ctx.ghl.acculynxOpps} opps, $${ctx.ghl.acculynxValue?.toLocaleString()}
+${ctx.ghl.acculynxOpps ? `- AccuLynx Pipeline: ${ctx.ghl.acculynxOpps} opps, $${ctx.ghl.acculynxValue?.toLocaleString()}` : ''}
 ${ctx.ghl.acculynxStages?.length ? `- AccuLynx stages:\n${ctx.ghl.acculynxStages.map((s: any) => `  • ${s.stage}: ${s.count} opps, $${s.value?.toLocaleString()}`).join('\n')}` : ''}
-${ctx.ghl.pipelines?.length ? `- All pipelines: ${ctx.ghl.pipelines.map((p: any) => `${p.name} (${p.opps} opps, $${p.value?.toLocaleString()})`).join(' | ')}` : ''}` : 'Not available'}
+${ctx.ghl.pipelines?.length ? `- All pipelines: ${ctx.ghl.pipelines.map((p: any) => `${p.name} (${p.opps} opps, $${p.value?.toLocaleString()})`).join(' | ')}` : ''}
+${ctx.ghl.topContactSources?.length ? `- Top contact sources: ${ctx.ghl.topContactSources.map((s: any) => `${s.source} (${s.count})`).join(', ')}` : ''}`)
+      }
 
-## 5. Google Analytics 4 — Website Traffic (${ctx.ga4Range ?? 'selected period'})
-${ctx.ga4 ? `- Sessions: ${ctx.ga4.sessions?.toLocaleString()} | Users: ${ctx.ga4.users?.toLocaleString()} | New Users: ${ctx.ga4.newUsers?.toLocaleString()}
+      if (ctx.ga4) {
+        dataSections.push(`## ${sectionNum++}. Google Analytics 4 — Website Traffic (${ctx.ga4Range ?? 'selected period'})
+- Sessions: ${ctx.ga4.sessions?.toLocaleString()} | Users: ${ctx.ga4.users?.toLocaleString()} | New Users: ${ctx.ga4.newUsers?.toLocaleString()}
 - Page Views: ${ctx.ga4.pageViews?.toLocaleString()} | Bounce Rate: ${ctx.ga4.bounceRate}%
 - Avg Session Duration: ${ctx.ga4.avgDuration}s | Conversions: ${ctx.ga4.conversions}
 - Top Traffic Channel: ${ctx.ga4.topChannel ?? 'N/A'}
 ${ctx.ga4.channels?.length ? `- Channels: ${ctx.ga4.channels.map((c: any) => `${c.channel} (${c.sessions?.toLocaleString()} sessions)`).join(', ')}` : ''}
-${ctx.ga4.topPages?.length ? `- Top pages: ${ctx.ga4.topPages.map((p: any) => `${p.page} (${p.views?.toLocaleString()} views, ${p.bounceRate}% bounce)`).join(' | ')}` : ''}` : 'Not available'}
+${ctx.ga4.topPages?.length ? `- Top pages: ${ctx.ga4.topPages.map((p: any) => `${p.page} (${p.views?.toLocaleString()} views, ${p.bounceRate}% bounce)`).join(' | ')}` : ''}`)
+      }
 
-## 6. Google Search Console — Organic Search (${ctx.gadsRange ?? 'selected period'})
-${ctx.gsc ? `- Organic Clicks: ${ctx.gsc.clicks?.toLocaleString()} | Impressions: ${ctx.gsc.impressions?.toLocaleString()}
+      if (ctx.gsc) {
+        dataSections.push(`## ${sectionNum++}. Google Search Console — Organic Search (${ctx.gadsRange ?? 'selected period'})
+- Organic Clicks: ${ctx.gsc.clicks?.toLocaleString()} | Impressions: ${ctx.gsc.impressions?.toLocaleString()}
 - Avg CTR: ${ctx.gsc.ctr}% | Avg Position: ${ctx.gsc.position}
 ${ctx.gsc.topQueries?.length ? `- Top keywords:\n${ctx.gsc.topQueries.map((q: any) => `  • "${q.query}": ${q.clicks} clicks, pos ${q.position}, ${q.ctr}% CTR`).join('\n')}` : `- Top keyword: "${ctx.gsc.topQuery}" (${ctx.gsc.topQueryClicks} clicks, pos ${ctx.gsc.topQueryPosition})`}
-${ctx.gsc.topPages?.length ? `- Top pages: ${ctx.gsc.topPages.map((p: any) => `${p.page} (${p.clicks} clicks)`).join(' | ')}` : ''}` : 'Not available'}
+${ctx.gsc.topPages?.length ? `- Top pages: ${ctx.gsc.topPages.map((p: any) => `${p.page} (${p.clicks} clicks)`).join(' | ')}` : ''}`)
+      }
 
-## 7. Microsoft Clarity — Session Behaviour
-${ctx.clarity ? `- Sessions: ${ctx.clarity.overview?.sessions?.toLocaleString()} | Users: ${ctx.clarity.overview?.users?.toLocaleString()}
+      if (ctx.clarity) {
+        dataSections.push(`## ${sectionNum++}. Microsoft Clarity — Session Behaviour
+- Sessions: ${ctx.clarity.overview?.sessions?.toLocaleString()} | Users: ${ctx.clarity.overview?.users?.toLocaleString()}
 - Bounce Rate: ${ctx.clarity.overview?.bounceRate}% | Avg Duration: ${ctx.clarity.overview?.avgSessionDuration}
-- New Users: ${ctx.clarity.overview?.newUsersPercent}% | Pages/Session: ${ctx.clarity.overview?.pagesPerSession}
-- Rage Clicks: ${ctx.clarity.behavior?.rageClicks} | Dead Clicks: ${ctx.clarity.behavior?.deadClicks} | Quick Backs: ${ctx.clarity.behavior?.quickBacks}
-- Avg Scroll Depth: ${ctx.clarity.behavior?.scrollDepth}% | JS Errors: ${ctx.clarity.behavior?.jsErrors}
-- Devices: ${ctx.clarity.devices?.map((d: any) => `${d.device} ${d.pct}%`).join(', ')}
-${ctx.clarity.topPages?.length ? `- Top pages: ${ctx.clarity.topPages.map((p: any) => `${p.url} (${p.views?.toLocaleString()} views, ${p.bounceRate}% bounce, ${p.avgTime})`).join(' | ')}` : ''}
-- Data source: ${ctx.clarity.source === 'live' ? 'Live API' : 'Sample data (Data Export API pending enterprise access)'}` : 'Connected — loading'}
+- Rage Clicks: ${ctx.clarity.behavior?.rageClicks} | Dead Clicks: ${ctx.clarity.behavior?.deadClicks}
+- Devices: ${ctx.clarity.devices?.map((d: any) => `${d.device} ${d.pct}%`).join(', ')}`)
+      }
 
-## 8. GROMAAP Call Tracking
-- Integrated with LSA and GHL for full call attribution
+      if (ctx.lsa || ctx.ghl) {
+        dataSections.push(`## ${sectionNum++}. Call Tracking
 - LSA phone calls this period: ${ctx.lsa?.phoneCalls ?? 'N/A'}
-- GHL conversations (calls + SMS): ${ctx.ghl?.conversations ?? 'N/A'}
+- GHL conversations (calls + SMS): ${ctx.ghl?.conversations ?? 'N/A'}`)
+      }
+
+      const systemPrompt = `You are GROMAAP Assistant — an intelligent marketing performance AI built into the Grokon Dashboard for ${clientName}, a ${clientIndustry} company.
+
+You have access to LIVE data from the connected platforms below. Use specific numbers in your answers. Only reference the data sections that are present.
+
+---
+
+${dataSections.join('\n\n')}
 
 ---
 
 ## Business Context
-- Client: Exterior Building Solutions (EBS), St. Louis MO
-- Services: Roofing, siding, gutters, windows, soffit & fascia
+- Client: ${clientName} (${clientShort})
+- Industry: ${clientIndustry}
 - All monetary values in USD | Date range: ${ctx.gadsRange ?? '30 days'}
-- Key KPIs: cost per lead, pipeline value, close rate, ROAS
+- Connected platforms: ${dataSections.length} active
 
-Answer questions clearly and concisely. Cite specific numbers from the data above. When you spot issues (high CPL, low CTR, bounce rate, attribution gaps), flag them proactively and suggest next steps. If data is genuinely unavailable, say so briefly and suggest what to check.`
+Answer questions clearly and concisely. Cite specific numbers from the data above. When you spot issues (high CPL, low engagement, attribution gaps), flag them proactively and suggest next steps. If data for a platform is not available, say so and suggest what to check.`
 
       const response = await anthropic.messages.create({
         model:      'claude-haiku-4-5',

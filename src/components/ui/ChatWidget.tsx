@@ -21,13 +21,18 @@ const SUGGESTED = [
 ]
 
 export function ChatWidget() {
-  const { dateRange } = useDashboard()
+  const { dateRange, activeClient } = useDashboard()
+  const cfg = activeClient.sources
+
   const [open, setOpen]         = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
+
+  // Reset conversation when switching clients
+  useEffect(() => { setMessages([]) }, [activeClient.id])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -39,21 +44,46 @@ export function ChatWidget() {
 
   function buildContext() {
     try {
-      const gads     = JSON.parse(sessionStorage.getItem('dash_gads')     ?? 'null')
-      const acculynx = JSON.parse(sessionStorage.getItem('dash_acculynx') ?? 'null')
-      const ghl      = JSON.parse(sessionStorage.getItem('dash_ghl')      ?? 'null')
-      const ga4      = JSON.parse(sessionStorage.getItem('dash_ga4')      ?? 'null')
-      const gsc      = JSON.parse(sessionStorage.getItem('dash_gsc')      ?? 'null')
-      const lsa      = JSON.parse(sessionStorage.getItem('dash_lsa')      ?? 'null')
-      const clarityRaw = JSON.parse(sessionStorage.getItem('dash_clarity') ?? 'null')
+      const gads     = cfg.googleAds ? JSON.parse(sessionStorage.getItem('dash_gads')     ?? 'null') : null
+      const acculynx = cfg.acculynx  ? JSON.parse(sessionStorage.getItem('dash_acculynx') ?? 'null') : null
+      const ghl      = cfg.highlevel ? JSON.parse(sessionStorage.getItem('dash_ghl')      ?? 'null') : null
+      const ga4      = cfg.ga4       ? JSON.parse(sessionStorage.getItem('dash_ga4')      ?? 'null') : null
+      const gsc      = cfg.gsc       ? JSON.parse(sessionStorage.getItem('dash_gsc')      ?? 'null') : null
+      const lsa      = cfg.lsa       ? JSON.parse(sessionStorage.getItem('dash_lsa')      ?? 'null') : null
+      const clarityRaw = cfg.clarity ? JSON.parse(sessionStorage.getItem('dash_clarity') ?? 'null') : null
       const clarity = clarityRaw
         ? { projectId: 'ko3ifc8c96', connected: true, ...clarityRaw }
-        : { projectId: 'ko3ifc8c96', connected: true }
-      return { gads, acculynx, ghl, ga4, gsc, lsa, clarity, gadsRange: dateRange, ga4Range: dateRange }
+        : null
+      return {
+        client: {
+          id:        activeClient.id,
+          name:      activeClient.name,
+          shortName: activeClient.shortName,
+          industry:  activeClient.industry,
+        },
+        gads, acculynx, ghl, ga4, gsc, lsa, clarity,
+        gadsRange: dateRange,
+        ga4Range:  dateRange,
+      }
     } catch {
       return {}
     }
   }
+
+  // Suggested questions tailored to what this client actually has
+  const suggested = [
+    cfg.highlevel && 'How many contacts do I have in GROMAAP?',
+    cfg.highlevel && 'What\'s the total pipeline value?',
+    cfg.highlevel && 'How many upcoming appointments are there?',
+    cfg.highlevel && 'Which contact sources are performing best?',
+    cfg.googleAds && 'What\'s my best performing campaign?',
+    cfg.googleAds && 'How much did I spend on ads this period?',
+    cfg.acculynx  && 'Which lead source has the highest close rate?',
+    cfg.acculynx  && 'How many opportunities are in the pipeline?',
+    cfg.gsc       && 'What are my top organic search keywords?',
+    cfg.ga4       && 'What\'s my website bounce rate?',
+    (!cfg.googleAds && !cfg.acculynx && !cfg.ga4) && 'Give me a full summary',
+  ].filter(Boolean) as string[]
 
   async function send(text?: string) {
     const content = (text ?? input).trim()
@@ -139,7 +169,7 @@ export function ChatWidget() {
                   Ask me anything about your campaigns, leads, pipeline, or traffic.
                 </p>
                 <div className="space-y-1.5 mt-3">
-                  {SUGGESTED.map(s => (
+                  {suggested.map(s => (
                     <button
                       key={s}
                       onClick={() => send(s)}
@@ -215,7 +245,7 @@ export function ChatWidget() {
                 </svg>
               </button>
             </div>
-            <p className="text-[9px] text-slate-600 text-center mt-1.5">GROMAAP · Powered by EBS Dashboard</p>
+            <p className="text-[9px] text-slate-600 text-center mt-1.5">GROMAAP · {activeClient.shortName} Dashboard</p>
           </div>
         </div>
       )}
