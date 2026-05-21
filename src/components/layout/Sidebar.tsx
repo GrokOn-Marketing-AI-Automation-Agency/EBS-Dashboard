@@ -3,7 +3,7 @@ import { useDashboard } from '../../context/DashboardContext'
 import { DATA_SOURCES } from '../../data/mockData'
 import { CLIENTS } from '../../config/clients'
 import { cn } from '../../utils/format'
-import gromaapLogo from '../../assets/gromaap-logo.png'
+import gromaapLogo from '../../assets/agencygro-logo.png'
 
 const NAV_ITEMS = [
   { label: 'Overview',           id: 'kpi'              },
